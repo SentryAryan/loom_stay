@@ -41,3 +41,19 @@ example
 # generated native folders
 /ios
 /android
+
+#ECC
+ECC
+
+#Graphify
+graphify-out
+
+#Ide/Agents related files/folders
+.cursor
+.vscode
+.claude
+.agents
+.cursorignore
+.graphifyignore
+skills-lock.json
+node_modules
