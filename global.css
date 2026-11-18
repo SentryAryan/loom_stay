@@ -3,3 +3,295 @@
 @import "tailwindcss/utilities.css";
 
 @import "nativewind/theme";
+
+/*
+ * Loom Stay design system ("Warm Editorial Sanctuary"), v1.
+ * Source: assets/design-systems/v1/{light_mode,dark_mode}/DESIGN.md.
+ * Colors are runtime variables: `@theme` creates the utilities (bg-surface,
+ * text-on-surface-variant, ...), `:root` holds the light values and the dark
+ * media query swaps them with the system theme. Keep src/theme/colors.ts in sync.
+ * Success/warning/info have no dark values in the reference; those are proposed.
+ */
+
+@theme {
+  --color-surface: var(--surface);
+  --color-surface-dim: var(--surface-dim);
+  --color-surface-bright: var(--surface-bright);
+  --color-surface-container-lowest: var(--surface-container-lowest);
+  --color-surface-container-low: var(--surface-container-low);
+  --color-surface-container: var(--surface-container);
+  --color-surface-container-high: var(--surface-container-high);
+  --color-surface-container-highest: var(--surface-container-highest);
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-variant: var(--on-surface-variant);
+  --color-inverse-surface: var(--inverse-surface);
+  --color-inverse-on-surface: var(--inverse-on-surface);
+  --color-outline: var(--outline);
+  --color-outline-variant: var(--outline-variant);
+  --color-surface-tint: var(--surface-tint);
+  --color-primary: var(--primary);
+  --color-on-primary: var(--on-primary);
+  --color-primary-container: var(--primary-container);
+  --color-on-primary-container: var(--on-primary-container);
+  --color-inverse-primary: var(--inverse-primary);
+  --color-secondary: var(--secondary);
+  --color-on-secondary: var(--on-secondary);
+  --color-secondary-container: var(--secondary-container);
+  --color-on-secondary-container: var(--on-secondary-container);
+  --color-tertiary: var(--tertiary);
+  --color-on-tertiary: var(--on-tertiary);
+  --color-tertiary-container: var(--tertiary-container);
+  --color-on-tertiary-container: var(--on-tertiary-container);
+  --color-error: var(--error);
+  --color-on-error: var(--on-error);
+  --color-error-container: var(--error-container);
+  --color-on-error-container: var(--on-error-container);
+  --color-primary-fixed: var(--primary-fixed);
+  --color-primary-fixed-dim: var(--primary-fixed-dim);
+  --color-on-primary-fixed: var(--on-primary-fixed);
+  --color-on-primary-fixed-variant: var(--on-primary-fixed-variant);
+  --color-secondary-fixed: var(--secondary-fixed);
+  --color-secondary-fixed-dim: var(--secondary-fixed-dim);
+  --color-on-secondary-fixed: var(--on-secondary-fixed);
+  --color-on-secondary-fixed-variant: var(--on-secondary-fixed-variant);
+  --color-tertiary-fixed: var(--tertiary-fixed);
+  --color-tertiary-fixed-dim: var(--tertiary-fixed-dim);
+  --color-on-tertiary-fixed: var(--on-tertiary-fixed);
+  --color-on-tertiary-fixed-variant: var(--on-tertiary-fixed-variant);
+  --color-background: var(--background);
+  --color-on-background: var(--on-background);
+  --color-surface-variant: var(--surface-variant);
+  --color-success: var(--success);
+  --color-success-container: var(--success-container);
+  --color-warning: var(--warning);
+  --color-warning-container: var(--warning-container);
+  --color-info: var(--info);
+  --color-info-container: var(--info-container);  --color-scrim: var(--scrim);
+
+  /* Fonts: one file per weight; React Native cannot synthesize weights. */
+  --font-jakarta: "PlusJakartaSans_400Regular";
+  --font-jakarta-medium: "PlusJakartaSans_500Medium";
+  --font-jakarta-semibold: "PlusJakartaSans_600SemiBold";
+  --font-jakarta-bold: "PlusJakartaSans_700Bold";
+  --font-jakarta-extrabold: "PlusJakartaSans_800ExtraBold";
+
+  /* Spacing: 4px grid. Native rem is 14, so pin the base to px: min-h-11 = 44. */
+  --spacing: 4px;
+  --spacing-2xs: 2px;
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --spacing-2xl: 40px;
+  --spacing-margin: 16px;
+  --spacing-gutter: 16px;
+
+  /* Radii. */
+  --radius-sm: 4px;
+  --radius-DEFAULT: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+}
+
+:root {
+  --surface: #fbf8ff;
+  --surface-dim: #f2d3d3;
+  --surface-bright: #fff8f7;
+  --surface-container-lowest: #ffffff;
+  --surface-container-low: #f8fafc;
+  --surface-container: #f1f5f9;
+  --surface-container-high: #e2e8f0;
+  --surface-container-highest: #fbdbdc;
+  --on-surface: #0f172a;
+  --on-surface-variant: #64748b;
+  --inverse-surface: #303035;
+  --inverse-on-surface: #f2eff6;
+  --outline: #cbd5e1;
+  --outline-variant: #f1f5f9;
+  --surface-tint: #be0038;
+  --primary: #ba0036;
+  --on-primary: #ffffff;
+  --primary-container: #e21e4a;
+  --on-primary-container: #fffbff;
+  --inverse-primary: #ffb2b6;
+  --secondary: #7e5700;
+  --on-secondary: #ffffff;
+  --secondary-container: #feb300;
+  --on-secondary-container: #6a4800;
+  --tertiary: #545c72;
+  --on-tertiary: #ffffff;
+  --tertiary-container: #6c748b;
+  --on-tertiary-container: #fefcff;
+  --error: #ef4444;
+  --on-error: #ffffff;
+  --error-container: #fee2e2;
+  --on-error-container: #93000a;
+  --primary-fixed: #ffdada;
+  --primary-fixed-dim: #ffb2b6;
+  --on-primary-fixed: #40000d;
+  --on-primary-fixed-variant: #920029;
+  --secondary-fixed: #ffdeac;
+  --secondary-fixed-dim: #ffba35;
+  --on-secondary-fixed: #281900;
+  --on-secondary-fixed-variant: #5f4100;
+  --tertiary-fixed: #dae2fd;
+  --tertiary-fixed-dim: #bec6e0;
+  --on-tertiary-fixed: #131b2e;
+  --on-tertiary-fixed-variant: #3f465c;
+  --background: #fbf8ff;
+  --on-background: #1b1b20;
+  --surface-variant: #e4e1e8;
+  --success: #10b981;
+  --success-container: #d1fae5;
+  --warning: #f59e0b;
+  --warning-container: #fef3c7;
+  --info: #3b82f6;
+  --info-container: #dbeafe;  --scrim: rgba(15, 23, 42, 0.45);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --surface: #131315;
+    --surface-dim: #131315;
+    --surface-bright: #39393b;
+    --surface-container-lowest: #0e0e10;
+    --surface-container-low: #1b1b1d;
+    --surface-container: #201f21;
+    --surface-container-high: #2a2a2c;
+    --surface-container-highest: #353437;
+    --on-surface: #e5e1e4;
+    --on-surface-variant: #e5bdbe;
+    --inverse-surface: #e5e1e4;
+    --inverse-on-surface: #303032;
+    --outline: #ac8889;
+    --outline-variant: #5c3f41;
+    --surface-tint: #ffb2b6;
+    --primary: #ffb2b6;
+    --on-primary: #68001a;
+    --primary-container: #ff5169;
+    --on-primary-container: #5b0016;
+    --inverse-primary: #be0038;
+    --secondary: #ffd798;
+    --on-secondary: #422c00;
+    --secondary-container: #feb300;
+    --on-secondary-container: #6a4800;
+    --tertiary: #62dca3;
+    --on-tertiary: #003823;
+    --tertiary-container: #1aa570;
+    --on-tertiary-container: #00311e;
+    --error: #ffb4ab;
+    --on-error: #690005;
+    --error-container: #93000a;
+    --on-error-container: #ffdad6;
+    --primary-fixed: #ffdada;
+    --primary-fixed-dim: #ffb2b6;
+    --on-primary-fixed: #40000d;
+    --on-primary-fixed-variant: #920029;
+    --secondary-fixed: #ffdeac;
+    --secondary-fixed-dim: #ffba35;
+    --on-secondary-fixed: #281900;
+    --on-secondary-fixed-variant: #5f4100;
+    --tertiary-fixed: #80f9bd;
+    --tertiary-fixed-dim: #62dca3;
+    --on-tertiary-fixed: #002113;
+    --on-tertiary-fixed-variant: #005234;
+    --background: #131315;
+    --on-background: #e5e1e4;
+    --surface-variant: #353437;
+    --success: #62dca3;
+    --success-container: #003823;
+    --warning: #ffd798;
+    --warning-container: #422c00;
+    --info: #bec6e0;
+    --info-container: #3f465c;    --scrim: rgba(18, 18, 20, 0.8);
+  }
+}
+
+/*
+ * Text styles. One class per style so family, size, line height and tracking
+ * always travel together. Letter spacing is in px (em * font size).
+ * Tabular numbers are set in <AppText numeric>, since `tabular-nums` is web only.
+ */
+@utility type-display-lg {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-size: 36px;
+  line-height: 44px;
+  letter-spacing: -1.08px;
+}
+@utility type-display-lg-mobile {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-size: 28px;
+  line-height: 34px;
+  letter-spacing: -0.7px;
+}
+@utility type-headline-xl {
+  font-family: "PlusJakartaSans_700Bold";
+  font-size: 24px;
+  line-height: 30px;
+  letter-spacing: -0.48px;
+}
+@utility type-headline-lg {
+  font-family: "PlusJakartaSans_700Bold";
+  font-size: 20px;
+  line-height: 26px;
+  letter-spacing: -0.3px;
+}
+@utility type-headline-md {
+  font-family: "PlusJakartaSans_600SemiBold";
+  font-size: 17px;
+  line-height: 22px;
+  letter-spacing: -0.17px;
+}
+@utility type-headline-sm {
+  font-family: "PlusJakartaSans_600SemiBold";
+  font-size: 15px;
+  line-height: 20px;
+  letter-spacing: -0.075px;
+}
+@utility type-body-lg {
+  font-family: "PlusJakartaSans_400Regular";
+  font-size: 16px;
+  line-height: 24px;
+}
+@utility type-body-md {
+  font-family: "PlusJakartaSans_400Regular";
+  font-size: 14px;
+  line-height: 20px;
+}
+@utility type-body-sm {
+  font-family: "PlusJakartaSans_400Regular";
+  font-size: 12px;
+  line-height: 16px;
+}
+@utility type-price-display {
+  font-family: "PlusJakartaSans_700Bold";
+  font-size: 18px;
+  line-height: 22px;
+  letter-spacing: -0.18px;
+}
+@utility type-label-md {
+  font-family: "PlusJakartaSans_600SemiBold";
+  font-size: 13px;
+  line-height: 16px;
+  letter-spacing: 0.13px;
+}
+@utility type-label-sm {
+  font-family: "PlusJakartaSans_700Bold";
+  font-size: 11px;
+  line-height: 14px;
+  letter-spacing: 0.22px;
+}
+
+/* Elevation levels 2-4 from the reference (level 1 is a border, no shadow). */
+@utility shadow-level-2 {
+  box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+}
+@utility shadow-level-3 {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.1), 0 2px 6px rgba(15, 23, 42, 0.04);
+}
+@utility shadow-level-4 {
+  box-shadow: 0 -8px 32px rgba(15, 23, 42, 0.08);
+}
