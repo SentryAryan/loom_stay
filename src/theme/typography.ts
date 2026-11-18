@@ -12,6 +12,9 @@ export const textVariants = {
   priceDisplay: "type-price-display",
   labelMd: "type-label-md",
   labelSm: "type-label-sm",
+  wordmarkSm: "type-wordmark-sm",
+  wordmarkMd: "type-wordmark-md",
+  wordmarkLg: "type-wordmark-lg",
 } as const;
 
 export type TextVariant = keyof typeof textVariants;

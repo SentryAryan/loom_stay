@@ -1,9 +1,11 @@
 // Temporary token gallery for comparing against assets/design-systems/v1.
 // Delete once real screens use the system.
+import { Stack } from "expo-router";
 import { ScrollView, View } from "react-native";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { Logo } from "@/components/logo";
 import { textVariants, type TextVariant } from "@/theme";
 
 const swatches = [
@@ -20,6 +22,9 @@ const swatches = [
   "bg-warning-container",
   "bg-info-container",
   "bg-error-container",
+  "bg-scrim",
+  "bg-glass",
+  "bg-on-scrim",
 ] as const;
 
 const radii = ["rounded-sm", "rounded", "rounded-md", "rounded-lg", "rounded-xl", "rounded-full"] as const;
@@ -28,6 +33,25 @@ const shadowLevels = ["shadow-level-2", "shadow-level-3", "shadow-level-4"] as c
 export default function DesignSystemPreview() {
   return (
     <ScrollView className="bg-surface" contentContainerClassName="gap-xl p-margin pb-2xl">
+      <Stack.Screen options={{ title: "Design system" }} />
+      <View className="gap-sm">
+        <AppText variant="labelSm" className="text-on-surface-variant">BRAND</AppText>
+        <View className="gap-md rounded-lg border border-outline-variant bg-surface-container-lowest p-md">
+          <Logo size="lg" />
+          <Logo size="md" />
+          <Logo size="sm" />
+          <View className="flex-row items-center gap-lg">
+            <Logo variant="symbol" size="lg" />
+            <Logo variant="symbol" size="md" />
+            <Logo variant="symbol" size="sm" />
+          </View>
+          <Logo variant="wordmark" size="lg" />
+        </View>
+        <View className="rounded-lg bg-inverse-surface p-md">
+          <Logo size="md" textClassName="text-inverse-on-surface" />
+        </View>
+      </View>
+
       <View className="gap-sm">
         <AppText variant="labelSm" className="text-on-surface-variant">COLORS</AppText>
         <View className="flex-row flex-wrap gap-sm">

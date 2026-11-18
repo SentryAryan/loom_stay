@@ -57,7 +57,9 @@ export const lightColors = {
   warningContainer: "#fef3c7",
   info: "#3b82f6",
   infoContainer: "#dbeafe",
-  scrim: "rgba(15, 23, 42, 0.45)",
+  scrim: "rgba(15, 23, 42, 0.62)",
+  glass: "rgba(255, 255, 255, 0.8)",
+  onScrim: "#ffffff",
 } as const;
 
 export type ColorRole = keyof typeof lightColors;
@@ -118,6 +120,8 @@ export const darkColors: ThemeColors = {
   info: "#bec6e0",
   infoContainer: "#3f465c",
   scrim: "rgba(18, 18, 20, 0.8)",
+  glass: "rgba(19, 19, 21, 0.72)",
+  onScrim: "#ffffff",
 };
 
 export function useThemeColors(): ThemeColors {

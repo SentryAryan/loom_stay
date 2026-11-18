@@ -67,6 +67,8 @@
   --color-warning-container: var(--warning-container);
   --color-info: var(--info);
   --color-info-container: var(--info-container);  --color-scrim: var(--scrim);
+  --color-glass: var(--glass);
+  --color-on-scrim: var(--on-scrim);
 
   /* Fonts: one file per weight; React Native cannot synthesize weights. */
   --font-jakarta: "PlusJakartaSans_400Regular";
@@ -149,7 +151,10 @@
   --warning: #f59e0b;
   --warning-container: #fef3c7;
   --info: #3b82f6;
-  --info-container: #dbeafe;  --scrim: rgba(15, 23, 42, 0.45);
+  --info-container: #dbeafe;  --scrim: rgba(15, 23, 42, 0.62);
+  /* Proposed (not in the reference): translucent pill on photos, and text on the scrim chip. */
+  --glass: rgba(255, 255, 255, 0.8);
+  --on-scrim: #ffffff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -207,6 +212,8 @@
     --warning-container: #422c00;
     --info: #bec6e0;
     --info-container: #3f465c;    --scrim: rgba(18, 18, 20, 0.8);
+    --glass: rgba(19, 19, 21, 0.72);
+    --on-scrim: #ffffff;
   }
 }
 
@@ -283,6 +290,26 @@
   font-size: 11px;
   line-height: 14px;
   letter-spacing: 0.22px;
+}
+
+/* Brand wordmark ("Loom Stay"): ExtraBold, tracking -0.03em, three sizes. */
+@utility type-wordmark-sm {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-size: 18px;
+  line-height: 22px;
+  letter-spacing: -0.54px;
+}
+@utility type-wordmark-md {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-size: 22px;
+  line-height: 26px;
+  letter-spacing: -0.66px;
+}
+@utility type-wordmark-lg {
+  font-family: "PlusJakartaSans_800ExtraBold";
+  font-size: 30px;
+  line-height: 34px;
+  letter-spacing: -0.9px;
 }
 
 /* Elevation levels 2-4 from the reference (level 1 is a border, no shadow). */

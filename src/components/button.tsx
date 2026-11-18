@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { ActivityIndicator, Pressable, type PressableProps } from "react-native";
 
 import { useThemeColors } from "@/theme";
@@ -25,6 +26,11 @@ const sizes = {
   lg: "min-h-14 px-xl",
 } as const;
 
+const justifyClasses = {
+  center: "justify-center gap-sm",
+  between: "justify-between gap-sm",
+} as const;
+
 export interface ButtonProps
   extends Omit<PressableProps, "children" | "className" | "style"> {
   title: string;
@@ -32,6 +38,11 @@ export interface ButtonProps
   size?: keyof typeof sizes;
   loading?: boolean;
   className?: string;
+  /** Icon or logo before the title. */
+  leading?: ReactNode;
+  /** Icon after the title, e.g. an arrow. Pair with justify="between" to pin it to the edge. */
+  trailing?: ReactNode;
+  justify?: keyof typeof justifyClasses;
 }
 
 export function Button({
@@ -41,6 +52,9 @@ export function Button({
   loading = false,
   disabled,
   className,
+  leading,
+  trailing,
+  justify = "center",
   ...props
 }: ButtonProps) {
   const colors = useThemeColors();
@@ -54,15 +68,19 @@ export function Button({
       accessibilityLabel={title}
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
-      className={`flex-row items-center justify-center rounded-full active:scale-95 ${v.container} ${sizes[size]} ${isDisabled ? "opacity-40" : ""} ${className ?? ""}`}
+      className={`flex-row items-center rounded-full active:scale-95 ${justifyClasses[justify]} ${v.container} ${sizes[size]} ${isDisabled ? "opacity-40" : ""} ${className ?? ""}`}
       {...props}
     >
       {loading ? (
         <ActivityIndicator color={spinner} />
       ) : (
-        <AppText variant="headlineSm" className={v.text}>
-          {title}
-        </AppText>
+        <>
+          {leading}
+          <AppText variant="headlineSm" className={v.text}>
+            {title}
+          </AppText>
+          {trailing}
+        </>
       )}
     </Pressable>
   );
