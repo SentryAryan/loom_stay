@@ -22,6 +22,13 @@ export default function Home() {
         variant="secondary"
         onPress={() => router.push("/design-system")}
       />
+
+      {/* TEMPORARY: lets us rerun the onboarding and auth flow. Remove once real auth and a home exist. */}
+      <Button
+        title="Back to onboarding"
+        variant="secondary"
+        onPress={() => router.replace("/")}
+      />
     </View>
   );
 }
