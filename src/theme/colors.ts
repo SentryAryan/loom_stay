@@ -60,6 +60,8 @@ export const lightColors = {
   scrim: "rgba(15, 23, 42, 0.62)",
   glass: "rgba(255, 255, 255, 0.8)",
   onScrim: "#ffffff",
+  glassDark: "rgba(0, 0, 0, 0.35)",
+  glassDarkBorder: "rgba(255, 255, 255, 0.25)",
 } as const;
 
 export type ColorRole = keyof typeof lightColors;
@@ -122,6 +124,8 @@ export const darkColors: ThemeColors = {
   scrim: "rgba(18, 18, 20, 0.8)",
   glass: "rgba(19, 19, 21, 0.72)",
   onScrim: "#ffffff",
+  glassDark: "rgba(0, 0, 0, 0.35)",
+  glassDarkBorder: "rgba(255, 255, 255, 0.25)",
 };
 
 export function useThemeColors(): ThemeColors {

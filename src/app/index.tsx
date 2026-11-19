@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
+import { BlurTargetView } from "expo-blur";
 import { router } from "expo-router";
-import { useRef, useState } from "react";
-import { FlatList, Pressable, View } from "react-native";
+import { useRef, useState, type ComponentRef } from "react";
+import { FlatList, Pressable, StyleSheet, View } from "react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
@@ -10,7 +11,9 @@ import { Button } from "@/components/button";
 import { GoogleLogo } from "@/components/google-logo";
 import { Logo } from "@/components/logo";
 import { HeroPager } from "@/features/onboarding/hero-pager";
+import { LocationChip } from "@/features/onboarding/location-chip";
 import { ProgressSegments } from "@/features/onboarding/progress-segments";
+import { SheetBackdrop } from "@/features/onboarding/sheet-backdrop";
 import { onboardingSlides, type OnboardingSlide } from "@/features/onboarding/slides";
 import { useThemeColors } from "@/theme";
 
@@ -20,6 +23,7 @@ export default function Onboarding() {
   const colors = useThemeColors();
   const insets = useSafeAreaInsets();
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
+  const blurTargetRef = useRef<ComponentRef<typeof View>>(null);
   const [index, setIndex] = useState(0);
 
   const slide = onboardingSlides[index];
@@ -36,7 +40,10 @@ export default function Onboarding() {
 
   return (
     <View className="flex-1 bg-surface-container">
-      <HeroPager slides={onboardingSlides} listRef={listRef} onIndexChange={setIndex} />
+      {/* Android only blurs what is inside the BlurTargetView, so the photos live in it. */}
+      <BlurTargetView ref={blurTargetRef} style={StyleSheet.absoluteFill}>
+        <HeroPager slides={onboardingSlides} listRef={listRef} onIndexChange={setIndex} />
+      </BlurTargetView>
 
       {/* Brand and Skip, over the photo. */}
       <View className="absolute inset-x-0 top-0" style={{ paddingTop: insets.top }} pointerEvents="box-none">
@@ -47,7 +54,7 @@ export default function Onboarding() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Skip onboarding"
-            onPress={() => router.replace("/home")}
+            onPress={() => router.push("/sign-up")}
             className="min-h-11 justify-center rounded-full bg-glass px-md active:scale-95"
           >
             <AppText variant="headlineSm">Skip</AppText>
@@ -57,47 +64,38 @@ export default function Onboarding() {
 
       {/* Location chip and bottom sheet. */}
       <View className="absolute inset-x-0 bottom-0" pointerEvents="box-none">
-        <Animated.View
-          key={`place-${slide.id}`}
-          entering={FadeIn.duration(250)}
-          className="mb-md ml-lg flex-row items-center gap-xs self-start rounded-full bg-scrim px-md py-xs"
-        >
-          <Ionicons name="location-sharp" size={16} color={colors.onScrim} />
-          <AppText variant="labelMd" className="text-on-scrim">
-            {slide.place}
-          </AppText>
-        </Animated.View>
+        <LocationChip key={`place-${slide.id}`} place={slide.place} blurTarget={blurTargetRef} />
 
-        <View
-          className="gap-md rounded-t-xl bg-surface-container-lowest px-lg pt-lg shadow-level-4"
-          style={{ paddingBottom: insets.bottom + 16 }}
-        >
-          <ProgressSegments total={onboardingSlides.length} current={index} />
+        <View className="relative">
+          <SheetBackdrop />
 
-          <Animated.View key={`copy-${slide.id}`} entering={FadeIn.duration(250)} className="gap-sm">
-            <AppText variant="displayLgMobile" accessibilityRole="header">
-              {slide.title}
-            </AppText>
-            <AppText variant="bodyLg" className="text-on-surface-variant">
-              {slide.body}
-            </AppText>
-          </Animated.View>
+          <View className="gap-md px-lg pt-xl" style={{ paddingBottom: insets.bottom + 16 }}>
+            <ProgressSegments total={onboardingSlides.length} current={index} />
 
-          <View className="gap-sm pt-sm">
-            <Button
-              title={isLast ? "Get started" : "Next"}
-              size="lg"
-              justify="between"
-              onPress={handlePrimary}
-              trailing={<Ionicons name="arrow-forward" size={20} color={colors.onPrimaryContainer} />}
-            />
-            <Button
-              title="Continue with Google"
-              variant="secondary"
-              size="lg"
-              leading={<GoogleLogo size={20} />}
-              onPress={() => router.push("/sign-in")}
-            />
+            <Animated.View key={`copy-${slide.id}`} entering={FadeIn.duration(250)} className="gap-sm">
+              <AppText variant="displayLgMobile" accessibilityRole="header">
+                {slide.title}
+              </AppText>
+              <AppText variant="bodyLg" className="text-on-surface-variant">
+                {slide.body}
+              </AppText>
+            </Animated.View>
+
+            <View className="gap-sm pt-sm">
+              <Button
+                title={isLast ? "Get started" : "Next"}
+                size="lg"
+                onPress={handlePrimary}
+                trailing={<Ionicons name="arrow-forward" size={20} color={colors.onPrimaryContainer} />}
+              />
+              <Button
+                title="Continue with Google"
+                variant="secondary"
+                size="lg"
+                leading={<GoogleLogo size={20} />}
+                onPress={() => router.push("/sign-in")}
+              />
+            </View>
           </View>
         </View>
       </View>

@@ -69,6 +69,8 @@
   --color-info-container: var(--info-container);  --color-scrim: var(--scrim);
   --color-glass: var(--glass);
   --color-on-scrim: var(--on-scrim);
+  --color-glass-dark: var(--glass-dark);
+  --color-glass-dark-border: var(--glass-dark-border);
 
   /* Fonts: one file per weight; React Native cannot synthesize weights. */
   --font-jakarta: "PlusJakartaSans_400Regular";
@@ -155,6 +157,9 @@
   /* Proposed (not in the reference): translucent pill on photos, and text on the scrim chip. */
   --glass: rgba(255, 255, 255, 0.8);
   --on-scrim: #ffffff;
+  /* Proposed: frosted dark chip over photos (fill + hairline border), same in both themes. */
+  --glass-dark: rgba(0, 0, 0, 0.35);
+  --glass-dark-border: rgba(255, 255, 255, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -214,6 +219,8 @@
     --info-container: #3f465c;    --scrim: rgba(18, 18, 20, 0.8);
     --glass: rgba(19, 19, 21, 0.72);
     --on-scrim: #ffffff;
+    --glass-dark: rgba(0, 0, 0, 0.35);
+    --glass-dark-border: rgba(255, 255, 255, 0.25);
   }
 }
 

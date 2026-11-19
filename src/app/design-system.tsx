@@ -25,6 +25,8 @@ const swatches = [
   "bg-scrim",
   "bg-glass",
   "bg-on-scrim",
+  "bg-glass-dark",
+  "bg-glass-dark-border",
 ] as const;
 
 const radii = ["rounded-sm", "rounded", "rounded-md", "rounded-lg", "rounded-xl", "rounded-full"] as const;
