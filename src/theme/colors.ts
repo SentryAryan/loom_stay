@@ -131,14 +131,3 @@ export const darkColors: ThemeColors = {
 export function useThemeColors(): ThemeColors {
   return useColorScheme() === "dark" ? darkColors : lightColors;
 }
-
-// CSS variable overrides for the current scheme (`onSurface` -> `--on-surface`).
-// The root layout applies these so className tokens and the JS colors above can
-// never disagree, even if the platform media query lags behind the system theme.
-export function themeVariables(colors: ThemeColors): Record<string, string> {
-  const entries = Object.entries(colors).map(([role, value]) => [
-    `--${role.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`)}`,
-    value,
-  ]);
-  return Object.fromEntries(entries);
-}
