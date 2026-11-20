@@ -10,9 +10,11 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
+import { vars } from "nativewind";
 import { useEffect } from "react";
+import { View } from "react-native";
 
-import { useThemeColors } from "@/theme";
+import { themeVariables, useThemeColors } from "@/theme";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -34,7 +36,7 @@ export default function RootLayout() {
   if (!isReady) return null;
 
   return (
-    <>
+    <View className="flex-1 bg-surface" style={vars(themeVariables(colors))}>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
@@ -47,6 +49,6 @@ export default function RootLayout() {
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
-    </>
+    </View>
   );
 }
