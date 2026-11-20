@@ -65,6 +65,7 @@ For a new feature or a change across several files. Small fixes and questions sk
 6. **Close out.**
    - Run the plan's Verification and give the report described under Reporting.
    - Add a short `## Result` to the plan and set `Status: done`.
+   - After significant codebase changes, update the graphify knowledge graph in `graphify-out/` (run the graphify skill, incremental update). Skip for small fixes.
    - Update this file: put each lasting decision in the section it belongs to. Replace or remove rules that are no longer true instead of appending. Keep this file under 150 lines.
 
 ## Building from designs
