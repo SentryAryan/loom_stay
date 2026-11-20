@@ -10,16 +10,28 @@ import {
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { vars } from "nativewind";
-import { useEffect } from "react";
-import { View } from "react-native";
+import * as SystemUI from "expo-system-ui";
+import { colorScheme } from "react-native-css";
+import { useEffect, useLayoutEffect } from "react";
+import { useColorScheme } from "react-native";
 
-import { themeVariables, useThemeColors } from "@/theme";
+import { useThemeColors } from "@/theme";
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
   const colors = useThemeColors();
+  const systemScheme = useColorScheme();
+
+  // The CSS dark media query reads its own copy of the scheme, which can stay
+  // stale on Android. Push the live system scheme into it so classNames match.
+  useLayoutEffect(() => {
+    colorScheme.set(systemScheme === "dark" ? "dark" : "light");
+  }, [systemScheme]);
+  useEffect(() => {
+    void SystemUI.setBackgroundColorAsync(colors.background);
+  }, [colors.background]);
+
   const [fontsLoaded, fontError] = useFonts({
     PlusJakartaSans_400Regular,
     PlusJakartaSans_500Medium,
@@ -36,7 +48,7 @@ export default function RootLayout() {
   if (!isReady) return null;
 
   return (
-    <View className="flex-1 bg-surface" style={vars(themeVariables(colors))}>
+    <>
       <StatusBar style="auto" />
       <Stack
         screenOptions={{
@@ -49,6 +61,6 @@ export default function RootLayout() {
         <Stack.Screen name="home" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack>
-    </View>
+    </>
   );
 }

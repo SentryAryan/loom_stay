@@ -9,7 +9,9 @@
  * Source: assets/design-systems/v1/{light_mode,dark_mode}/DESIGN.md.
  * Colors are runtime variables: `@theme` creates the utilities (bg-surface,
  * text-on-surface-variant, ...), `:root` holds the light values and the dark
- * media query swaps them with the system theme. Keep src/theme/colors.ts in sync.
+ * media query swaps them with the system theme. Both themes sit behind an explicit
+ * media query: react-native-css takes the first matching entry per variable, so an
+ * unconditional light block would always win over the dark one. Keep src/theme/colors.ts in sync.
  * Success/warning/info have no dark values in the reference; those are proposed.
  */
 
@@ -100,6 +102,7 @@
   --radius-full: 9999px;
 }
 
+@media (prefers-color-scheme: light) {
 :root {
   --surface: #fbf8ff;
   --surface-dim: #f2d3d3;
@@ -153,13 +156,15 @@
   --warning: #f59e0b;
   --warning-container: #fef3c7;
   --info: #3b82f6;
-  --info-container: #dbeafe;  --scrim: rgba(15, 23, 42, 0.62);
+  --info-container: #dbeafe;
+  --scrim: rgba(15, 23, 42, 0.62);
   /* Proposed (not in the reference): translucent pill on photos, and text on the scrim chip. */
   --glass: rgba(255, 255, 255, 0.8);
   --on-scrim: #ffffff;
   /* Proposed: frosted dark chip over photos (fill + hairline border), same in both themes. */
   --glass-dark: rgba(0, 0, 0, 0.35);
   --glass-dark-border: rgba(255, 255, 255, 0.25);
+}
 }
 
 @media (prefers-color-scheme: dark) {
@@ -216,7 +221,8 @@
     --warning: #ffd798;
     --warning-container: #422c00;
     --info: #bec6e0;
-    --info-container: #3f465c;    --scrim: rgba(18, 18, 20, 0.8);
+    --info-container: #3f465c;
+    --scrim: rgba(18, 18, 20, 0.8);
     --glass: rgba(19, 19, 21, 0.72);
     --on-scrim: #ffffff;
     --glass-dark: rgba(0, 0, 0, 0.35);

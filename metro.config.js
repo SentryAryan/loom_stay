@@ -4,7 +4,10 @@ const { withNativewind } = require("nativewind/metro");
 /** @type {import('expo/metro-config').MetroConfig} */
 const config = getDefaultConfig(__dirname);
 
-const nativewindConfig = withNativewind(config);
+// Keep every CSS variable dynamic. By default single-declared variables (the
+// `--color-*` theme aliases) are inlined at compile time, which froze the light
+// values into classNames and ignored the dark :root block.
+const nativewindConfig = withNativewind(config, { inlineVariables: false });
 
 // react-native-css redirects every `import ... from "react-native"` to its own
 // shim, which does not export `AssetRegistry` (react-native-css issues #506 and
