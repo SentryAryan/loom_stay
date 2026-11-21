@@ -15,6 +15,7 @@
       }
     },
     "android": {
+      "package": "com.aryansrivastava.loomstay",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/others/android-icon-foreground.png",
