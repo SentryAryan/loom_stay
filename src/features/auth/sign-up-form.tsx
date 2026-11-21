@@ -9,15 +9,19 @@ import { TextField, type TextInputHandle } from "@/components/text-field";
 import { useThemeColors } from "@/theme";
 
 import { AuthScreen, AuthSwitchLink } from "./auth-screen";
-import { authService, type SocialProvider } from "./mock-auth";
 import { PasswordField } from "./password-field";
+import { SigningInOverlay } from "./signing-in-overlay";
 import { SocialButtons } from "./social-buttons";
+import { useGoogleSignIn } from "./use-google-sign-in";
+import { useSignUpFlow } from "./use-sign-up-flow";
 import { validateEmail, validateName, validatePassword } from "./validation";
 
 type Field = "name" | "email" | "password";
 
 export function SignUpForm() {
   const colors = useThemeColors();
+  const { start } = useSignUpFlow();
+  const { signInWithGoogle, isFinishing } = useGoogleSignIn();
   const emailRef = useRef<TextInputHandle>(null);
   const passwordRef = useRef<TextInputHandle>(null);
   const [values, setValues] = useState({ name: "", email: "", password: "" });
@@ -40,29 +44,26 @@ export function SignUpForm() {
     setFormError(null);
     if (errors.name || errors.email || errors.password) return;
     setIsLoading(true);
-    try {
-      await authService.signUp({ name: values.name.trim(), email: values.email.trim(), password: values.password });
-      router.push({ pathname: "/verify", params: { email: values.email.trim() } });
-    } catch {
-      setFormError("We couldn't create your account. Try again.");
-    } finally {
-      setIsLoading(false);
+    const email = values.email.trim();
+    const message = await start({ name: values.name, email, password: values.password });
+    setIsLoading(false);
+    if (message) {
+      setFormError(message);
+      return;
     }
+    router.push({ pathname: "/verify", params: { email } });
   }
 
-  async function handleProvider(provider: SocialProvider) {
+  async function handleGoogle() {
     setFormError(null);
     setIsLoading(true);
-    try {
-      await authService.signInWithProvider(provider);
-      router.replace("/home");
-    } catch {
-      setFormError("We couldn't sign you in. Try again.");
-      setIsLoading(false);
-    }
+    const message = await signInWithGoogle();
+    setIsLoading(false);
+    if (message) setFormError(message);
   }
 
   return (
+    <>
     <AuthScreen
       title={"Create\nyour account"}
       body="Join Loom Stay to save your stays, get personalized recommendations and access them across all your devices."
@@ -130,9 +131,14 @@ export function SignUpForm() {
         trailing={<Ionicons name="arrow-forward" size={22} color={colors.onPrimaryContainer} />}
       />
 
-      <SocialButtons onPress={handleProvider} disabled={isLoading} />
+      <SocialButtons onGooglePress={handleGoogle} disabled={isLoading} />
+
+      {/* Clerk's bot protection mounts its challenge here. */}
+      <View nativeID="clerk-captcha" />
 
       <AuthSwitchLink prompt="Already have an account?" linkLabel="Sign in" href="/sign-in" />
     </AuthScreen>
+    {isFinishing ? <SigningInOverlay /> : null}
+    </>
   );
 }

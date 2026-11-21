@@ -1,4 +1,4 @@
-import { ClerkProvider } from "@clerk/expo";
+import { ClerkProvider, useAuth } from "@clerk/expo";
 import { tokenCache } from "@clerk/expo/token-cache";
 import "../../global.css";
 import {
@@ -49,28 +49,47 @@ export default function RootLayout() {
   });
   const isReady = fontsLoaded || fontError != null;
 
-  useEffect(() => {
-    if (isReady) SplashScreen.hideAsync();
-  }, [isReady]);
-
   if (!isReady) return null;
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <>
-        <StatusBar style="auto" />
-        <Stack
-          screenOptions={{
-            contentStyle: { backgroundColor: colors.background },
-            headerStyle: { backgroundColor: colors.surface },
-            headerTintColor: colors.onSurface,
-          }}
-        >
-          <Stack.Screen name="index" options={{ headerShown: false }} />
-          <Stack.Screen name="home" options={{ headerShown: false }} />
-          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        </Stack>
-      </>
+      <StatusBar style="auto" />
+      <RootNavigator />
     </ClerkProvider>
+  );
+}
+
+// Signed-out guests see onboarding and the auth screens; signed-in guests see the
+// app. Guards are client-side UX only: anything sensitive must be checked server-side.
+function RootNavigator() {
+  const colors = useThemeColors();
+  const { isLoaded, isSignedIn } = useAuth();
+
+  // Keep the splash up until Clerk has restored the saved session, so a signed-in
+  // guest never sees a flash of onboarding on a cold start.
+  useEffect(() => {
+    if (isLoaded) void SplashScreen.hideAsync();
+  }, [isLoaded]);
+
+  if (!isLoaded) return null;
+
+  return (
+    <Stack
+      screenOptions={{
+        contentStyle: { backgroundColor: colors.background },
+        headerStyle: { backgroundColor: colors.surface },
+        headerTintColor: colors.onSurface,
+      }}
+    >
+      <Stack.Screen name="sso-callback" options={{ headerShown: false }} />
+      <Stack.Protected guard={!isSignedIn}>
+        <Stack.Screen name="index" options={{ headerShown: false }} />
+        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+      </Stack.Protected>
+      <Stack.Protected guard={!!isSignedIn}>
+        <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="design-system" />
+      </Stack.Protected>
+    </Stack>
   );
 }

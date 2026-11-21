@@ -10,6 +10,8 @@ import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { GoogleLogo } from "@/components/google-logo";
 import { Logo } from "@/components/logo";
+import { SigningInOverlay } from "@/features/auth/signing-in-overlay";
+import { useGoogleSignIn } from "@/features/auth/use-google-sign-in";
 import { HeroPager } from "@/features/onboarding/hero-pager";
 import { LocationChip } from "@/features/onboarding/location-chip";
 import { ProgressSegments } from "@/features/onboarding/progress-segments";
@@ -25,6 +27,18 @@ export default function Onboarding() {
   const listRef = useRef<FlatList<OnboardingSlide>>(null);
   const blurTargetRef = useRef<ComponentRef<typeof View>>(null);
   const [index, setIndex] = useState(0);
+  const { signInWithGoogle, isFinishing } = useGoogleSignIn();
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [googleError, setGoogleError] = useState<string | null>(null);
+
+  // Signs in (or up) with Google right here; the route guards move a signed-in guest to /home.
+  const handleGoogle = async () => {
+    setGoogleError(null);
+    setIsGoogleLoading(true);
+    const message = await signInWithGoogle();
+    setIsGoogleLoading(false);
+    if (message) setGoogleError(message);
+  };
 
   const slide = onboardingSlides[index];
   const isLast = index === LAST_INDEX;
@@ -88,17 +102,25 @@ export default function Onboarding() {
                 onPress={handlePrimary}
                 trailing={<Ionicons name="arrow-forward" size={20} color={colors.onPrimaryContainer} />}
               />
+              {googleError ? (
+                <AppText variant="bodyMd" className="text-error" accessibilityLiveRegion="polite">
+                  {googleError}
+                </AppText>
+              ) : null}
               <Button
                 title="Continue with Google"
                 variant="secondary"
                 size="lg"
+                loading={isGoogleLoading}
                 leading={<GoogleLogo size={20} />}
-                onPress={() => router.push("/sign-in")}
+                onPress={handleGoogle}
               />
             </View>
           </View>
         </View>
       </View>
+
+      {isFinishing ? <SigningInOverlay /> : null}
     </View>
   );
 }
