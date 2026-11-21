@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from "expo-router";
+import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
@@ -6,14 +6,26 @@ import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 
 import { AuthScreen } from "./auth-screen";
-import { authService } from "./mock-auth";
 import { OtpInput } from "./otp-input";
+import { useSignInFlow } from "./use-sign-in-flow";
+import { useSignUpFlow } from "./use-sign-up-flow";
 import { isCompleteCode } from "./validation";
 
 const RESEND_SECONDS = 30;
 
 export function VerifyForm() {
-  const { email } = useLocalSearchParams<{ email?: string }>();
+  const { email: emailParam, mode } = useLocalSearchParams<{ email?: string; mode?: string }>();
+  const signUpFlow = useSignUpFlow();
+  const signInFlow = useSignInFlow();
+  // "device": signing in from a device Clerk hasn't seen for this account. Otherwise this
+  // is the email check after sign-up.
+  const isDeviceCheck = mode === "device";
+  const hasFlowInProgress = isDeviceCheck ? signInFlow.hasDeviceVerification : signUpFlow.hasSignUpInProgress;
+  const emailAddress = isDeviceCheck ? signInFlow.emailAddress : signUpFlow.emailAddress;
+  const resend = isDeviceCheck ? signInFlow.resendDeviceCode : signUpFlow.resend;
+  const verify = isDeviceCheck ? signInFlow.verifyDeviceCode : signUpFlow.verify;
+  const restart = isDeviceCheck ? signInFlow.restart : signUpFlow.restart;
+  const email = emailAddress ?? emailParam;
   const [code, setCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -26,16 +38,15 @@ export function VerifyForm() {
     return () => clearTimeout(id);
   }, [secondsLeft]);
 
-  async function verify(value: string) {
+  async function submitCode(value: string) {
     setIsLoading(true);
     setError(null);
-    try {
-      await authService.verifyCode(value);
-      router.replace("/home");
-    } catch (caught: unknown) {
-      setError(caught instanceof Error ? caught.message : "Something went wrong. Try again.");
+    const message = await verify(value);
+    setIsLoading(false);
+    // On success the route guards move the guest to /home once the session is active.
+    if (message) {
+      setError(message);
       setCode("");
-      setIsLoading(false);
     }
   }
 
@@ -43,27 +54,36 @@ export function VerifyForm() {
     setCode(value);
     setError(null);
     setNotice(null);
-    if (isCompleteCode(value)) verify(value);
+    if (isCompleteCode(value)) submitCode(value);
   }
 
   async function handleResend() {
     setError(null);
     setCode("");
-    try {
-      await authService.resendCode(email ?? "");
-      setSecondsLeft(RESEND_SECONDS);
-      setNotice("We sent you a new code.");
-    } catch {
-      setError("We couldn't resend the code. Try again.");
+    const message = await resend();
+    if (message) {
+      setError(message);
+      return;
     }
+    setSecondsLeft(RESEND_SECONDS);
+    setNotice("We sent you a new code.");
+  }
+
+  function handleUseDifferentEmail() {
+    restart();
+    router.back();
   }
 
   const canResend = secondsLeft <= 0 && !isLoading;
 
+  // Nothing in progress (for example the app restarted mid-way): start over.
+  if (!hasFlowInProgress && !isLoading) return <Redirect href={isDeviceCheck ? "/sign-in" : "/sign-up"} />;
+
+  const purpose = isDeviceCheck ? "confirm it's you signing in on this device" : "verify your account";
   return (
     <AuthScreen
-      title={"Check\nyour email"}
-      body={email ? `We sent a 6-digit code to ${email}. Enter it below to verify your account.` : "Enter the 6-digit code we sent you."}
+      title={isDeviceCheck ? "Confirm\nit's you" : "Check\nyour email"}
+      body={email ? `We sent a 6-digit code to ${email}. Enter it below to ${purpose}.` : "Enter the 6-digit code we sent you."}
     >
       <View className="gap-sm">
         <OtpInput value={code} onChange={handleChange} hasError={!!error} disabled={isLoading} />
@@ -84,7 +104,7 @@ export function VerifyForm() {
         size="lg"
         loading={isLoading}
         disabled={!isCompleteCode(code)}
-        onPress={() => verify(code)}
+        onPress={() => submitCode(code)}
       />
 
       <View className="items-center gap-xs">
@@ -101,7 +121,7 @@ export function VerifyForm() {
         </Pressable>
         <Pressable
           accessibilityRole="button"
-          onPress={() => router.back()}
+          onPress={handleUseDifferentEmail}
           className="min-h-11 justify-center"
         >
           <AppText variant="bodyMd" className="text-on-surface-variant">

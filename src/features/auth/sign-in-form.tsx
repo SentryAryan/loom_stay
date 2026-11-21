@@ -9,15 +9,19 @@ import { TextField, type TextInputHandle } from "@/components/text-field";
 import { useThemeColors } from "@/theme";
 
 import { AuthScreen, AuthSwitchLink } from "./auth-screen";
-import { authService, type SocialProvider } from "./mock-auth";
 import { PasswordField } from "./password-field";
+import { SigningInOverlay } from "./signing-in-overlay";
 import { SocialButtons } from "./social-buttons";
+import { useGoogleSignIn } from "./use-google-sign-in";
+import { useSignInFlow } from "./use-sign-in-flow";
 import { validateEmail, validatePassword } from "./validation";
 
 type Field = "email" | "password";
 
 export function SignInForm() {
   const colors = useThemeColors();
+  const { signInWithPassword } = useSignInFlow();
+  const { signInWithGoogle, isFinishing } = useGoogleSignIn();
   const passwordRef = useRef<TextInputHandle>(null);
   const [values, setValues] = useState({ email: "", password: "" });
   const [touched, setTouched] = useState<Record<Field, boolean>>({ email: false, password: false });
@@ -38,28 +42,27 @@ export function SignInForm() {
     setFormError(null);
     if (errors.email || errors.password) return;
     setIsLoading(true);
-    try {
-      await authService.signIn({ email: values.email.trim(), password: values.password });
-      router.replace("/home");
-    } catch {
-      setFormError("We couldn't sign you in. Check your details and try again.");
-      setIsLoading(false);
+    const email = values.email.trim();
+    const { error, needsDeviceCode } = await signInWithPassword(email, values.password);
+    setIsLoading(false);
+    if (error) {
+      setFormError(error);
+      return;
     }
+    // New device: Clerk emailed a code. Success otherwise is handled by the route guards.
+    if (needsDeviceCode) router.push({ pathname: "/verify", params: { email, mode: "device" } });
   }
 
-  async function handleProvider(provider: SocialProvider) {
+  async function handleGoogle() {
     setFormError(null);
     setIsLoading(true);
-    try {
-      await authService.signInWithProvider(provider);
-      router.replace("/home");
-    } catch {
-      setFormError("We couldn't sign you in. Try again.");
-      setIsLoading(false);
-    }
+    const message = await signInWithGoogle();
+    setIsLoading(false);
+    if (message) setFormError(message);
   }
 
   return (
+    <>
     <AuthScreen title={"Welcome\nback"} body="Sign in to pick up your saved stays and recommendations where you left off.">
       <View className="gap-md">
         <TextField
@@ -108,9 +111,11 @@ export function SignInForm() {
         trailing={<Ionicons name="arrow-forward" size={22} color={colors.onPrimaryContainer} />}
       />
 
-      <SocialButtons onPress={handleProvider} disabled={isLoading} />
+      <SocialButtons onGooglePress={handleGoogle} disabled={isLoading} />
 
       <AuthSwitchLink prompt="New to Loom Stay?" linkLabel="Create account" href="/sign-up" />
     </AuthScreen>
+    {isFinishing ? <SigningInOverlay /> : null}
+    </>
   );
 }
