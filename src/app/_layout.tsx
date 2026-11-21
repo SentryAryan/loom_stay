@@ -1,3 +1,5 @@
+import { ClerkProvider } from "@clerk/expo";
+import { tokenCache } from "@clerk/expo/token-cache";
 import "../../global.css";
 import {
   PlusJakartaSans_400Regular,
@@ -16,6 +18,12 @@ import { useEffect, useLayoutEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { useThemeColors } from "@/theme";
+
+const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
+
+if (!publishableKey) {
+  throw new Error("Missing EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY. Add your key to .env.local.\nRun: 1) clerk auth login  2) clerk link  3) clerk env pull — then restart the dev server.");
+}
 
 SplashScreen.preventAutoHideAsync();
 
@@ -48,19 +56,21 @@ export default function RootLayout() {
   if (!isReady) return null;
 
   return (
-    <>
-      <StatusBar style="auto" />
-      <Stack
-        screenOptions={{
-          contentStyle: { backgroundColor: colors.background },
-          headerStyle: { backgroundColor: colors.surface },
-          headerTintColor: colors.onSurface,
-        }}
-      >
-        <Stack.Screen name="index" options={{ headerShown: false }} />
-        <Stack.Screen name="home" options={{ headerShown: false }} />
-        <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-      </Stack>
-    </>
+    <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
+      <>
+        <StatusBar style="auto" />
+        <Stack
+          screenOptions={{
+            contentStyle: { backgroundColor: colors.background },
+            headerStyle: { backgroundColor: colors.surface },
+            headerTintColor: colors.onSurface,
+          }}
+        >
+          <Stack.Screen name="index" options={{ headerShown: false }} />
+          <Stack.Screen name="home" options={{ headerShown: false }} />
+          <Stack.Screen name="(auth)" options={{ headerShown: false }} />
+        </Stack>
+      </>
+    </ClerkProvider>
   );
 }
