@@ -1,12 +1,16 @@
 import { useSSO } from "@clerk/expo";
+import * as WebBrowser from "expo-web-browser";
 import { useState } from "react";
 import { AppState } from "react-native";
 
 import { authErrorMessage } from "./auth-errors";
-import { ssoRedirectUrl } from "./sso-redirect-url";
+import { SSO_REDIRECT_URL } from "./sso-redirect-url";
 
 const GOOGLE_FALLBACK = "We couldn't sign you in with Google. Try again.";
 const MISSING_REQUIREMENTS = "Google didn't share everything we need to create your account.";
+
+// Closes a browser auth session left open when the app is reopened from the return link.
+WebBrowser.maybeCompleteAuthSession();
 
 // signInWithGoogle returns an error message for the screen to show, or null on success or
 // when the guest closes the browser (cancelling is not an error).
@@ -27,7 +31,7 @@ export function useGoogleSignIn() {
     try {
       const { createdSessionId, setActive, signUp } = await startSSOFlow({
         strategy: "oauth_google",
-        redirectUrl: ssoRedirectUrl(),
+        redirectUrl: SSO_REDIRECT_URL,
       });
       if (createdSessionId && setActive) {
         await setActive({ session: createdSessionId });

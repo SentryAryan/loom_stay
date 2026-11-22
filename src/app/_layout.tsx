@@ -1,5 +1,4 @@
 import { ClerkProvider, useAuth } from "@clerk/expo";
-import { tokenCache } from "@clerk/expo/token-cache";
 import "../../global.css";
 import {
   PlusJakartaSans_400Regular,
@@ -17,6 +16,7 @@ import { colorScheme } from "react-native-css";
 import { useEffect, useLayoutEffect } from "react";
 import { useColorScheme } from "react-native";
 
+import { tokenCache } from "@/features/auth/token-cache";
 import { useThemeColors } from "@/theme";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";

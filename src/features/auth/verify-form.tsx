@@ -1,19 +1,24 @@
+import { Ionicons } from "@expo/vector-icons";
+import * as Clipboard from "expo-clipboard";
 import { Redirect, router, useLocalSearchParams } from "expo-router";
 import { useEffect, useState } from "react";
 import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { useThemeColors } from "@/theme";
 
 import { AuthScreen } from "./auth-screen";
 import { OtpInput } from "./otp-input";
 import { useSignInFlow } from "./use-sign-in-flow";
 import { useSignUpFlow } from "./use-sign-up-flow";
-import { isCompleteCode } from "./validation";
+import { findCode, isCompleteCode } from "./validation";
 
 const RESEND_SECONDS = 30;
+const NO_CODE_COPIED = "Copy the 6-digit code from the email, then tap Paste code.";
 
 export function VerifyForm() {
+  const colors = useThemeColors();
   const { email: emailParam, mode } = useLocalSearchParams<{ email?: string; mode?: string }>();
   const signUpFlow = useSignUpFlow();
   const signInFlow = useSignInFlow();
@@ -57,6 +62,23 @@ export function VerifyForm() {
     if (isCompleteCode(value)) submitCode(value);
   }
 
+  // Android can't autofill codes from email, so guests copy it (Gmail offers "Copy code")
+  // and paste it here. A complete code submits right away, like typing the last digit.
+  async function handlePaste() {
+    let pasted: string | null = null;
+    try {
+      pasted = findCode(await Clipboard.getStringAsync());
+    } catch {
+      pasted = null; // An unreadable clipboard is the same as one without a code.
+    }
+    if (pasted) {
+      handleChange(pasted);
+      return;
+    }
+    setError(null);
+    setNotice(NO_CODE_COPIED);
+  }
+
   async function handleResend() {
     setError(null);
     setCode("");
@@ -87,6 +109,15 @@ export function VerifyForm() {
     >
       <View className="gap-sm">
         <OtpInput value={code} onChange={handleChange} hasError={!!error} disabled={isLoading} />
+        <Button
+          title="Paste code"
+          variant="ghost"
+          size="sm"
+          className="self-start"
+          disabled={isLoading}
+          onPress={handlePaste}
+          leading={<Ionicons name="clipboard-outline" size={18} color={colors.onSurfaceVariant} />}
+        />
         {error ? (
           <AppText variant="bodySm" className="px-xs text-error" accessibilityLiveRegion="polite">
             {error}
