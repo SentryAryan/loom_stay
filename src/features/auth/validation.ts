@@ -28,3 +28,10 @@ export function validatePassword(value: string): string | null {
 export function isCompleteCode(value: string): boolean {
   return new RegExp(`^\\d{${CODE_LENGTH}}$`).test(value);
 }
+
+// The first standalone 6-digit run in copied text ("Your code is 424242."), or null.
+// Digits that are part of a longer number (a phone number, a date) don't count.
+export function findCode(text: string): string | null {
+  const match = new RegExp(`(?<!\\d)\\d{${CODE_LENGTH}}(?!\\d)`).exec(text);
+  return match ? match[0] : null;
+}
