@@ -42,7 +42,7 @@ Each tool has one job. Ask before moving a responsibility to a different tool.
 
 ## Rules
 
-- Secret keys (Clerk secret key, TypeSafe key, Sanity organization token, Sanity write token) never reach the app bundle. Use them only in API routes and local scripts such as seeding. Never put them behind `EXPO_PUBLIC_`, which is bundled into the app. Never commit `.env`. Keep variable names, without values, in `.env.example`.
+- Secret keys (Clerk secret key, TypeSafe key, Sanity organization token, Sanity write token) never reach the app bundle. Use them only in API routes and local scripts such as seeding. Never put them behind `EXPO_PUBLIC_`, which is bundled into the app. Never commit `.env`. Keep variable names, without values, in `.env.example`. The app needs `.env.local` (`EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY`, `CLERK_SECRET_KEY`); it is not in git, so ask the user for it.
 - Sanity Context needs a deployed Studio for the dataset. Redeploy Studio from `studio/` after schema changes.
 - Jev is not an agent. It answers typed questions (Choice, Noul, Score) with probabilities. It never writes GROQ, calls tools, or generates text. Code builds queries from its answers.
 - Prices, guest counts, and dates are parsed in code. Jev may choose between candidates code found, but never produces the value.
@@ -67,17 +67,20 @@ For a new feature or a change across several files. Small fixes and questions sk
    - Run the plan's Verification and give the report described under Reporting.
    - Add a short `## Result` to the plan and set `Status: done`.
    - After significant codebase changes, update the graphify knowledge graph in `graphify-out/` (run the graphify skill, incremental update). Skip for small fixes.
+   - Commit on a branch off `master` (never on `master`) after lint and type check pass (there is no test script yet), with no attribution lines in commits or PRs; then open a PR, squash-merge it and delete the branch.
    - Update this file: put each lasting decision in the section it belongs to. Replace or remove rules that are no longer true instead of appending. Keep this file under 150 lines.
 
 ## Building from designs
 
-Designs are attached in the chat. Screens must match them exactly: layout, spacing, sizes, colors, type, radii, icons, and copy.
+Designs are attached in the chat and also live in `assets/images/prompt-images/designs/` (`Home`, `Search results`, `Profile`, `Property details` as `@2x.png`, each with a `*.dc.html` holding the exact pixel values: read the HTML for values and the PNG for the look); the design system is in `assets/design-systems/v1/{light,dark}_mode/DESIGN.md`. Screens must match them exactly: layout, spacing, sizes, colors, type, radii, icons, and copy.
 
-- Icons, fonts, and brand images come from `assets/` or the chosen icon library, never recreated from a screenshot. Sample property photos may be remote placeholder images. If an asset is missing, use a marked placeholder and list it.
+- Icons, fonts, and brand images come from `assets/` or the chosen icon library, never recreated from a screenshot. Sample property photos may be remote placeholder images (Unsplash `images.unsplash.com/photo-<id>` URLs: unsplash.com search blocks automated browsing, so pick IDs, check each with curl for HTTP 200 and look at the image; record credits when known). If an asset is missing, use a marked placeholder and list it.
 - Map every color, font, spacing value, and radius to a design-system token. List values with no token in the plan as proposed new tokens instead of hardcoding them. When creating the design system itself, derive the tokens from the designs.
 - UI plans describe the design (elements, states, tokens, assets) well enough to build without the image. If building in a new session, ask for the design to be attached again.
 - After building, check the screen on a device and compare it with the design. List every difference, fix, and repeat. Report which values were estimated from an image. On macOS use the iOS simulator (`xcrun simctl openurl booted <url>`, `xcrun simctl io booted screenshot <path>`; the scheme is in `app.json`).
 - On this Windows machine, test on the Android emulator yourself through `adb` (`$LOCALAPPDATA/Android/Sdk/platform-tools/adb.exe`); never ask the user for screenshots. Metro always runs on port 8081, never another port. First check it: `curl -s localhost:8081/status` should print `packager-status:running`; if one is running, use it. If not, start `npx expo start --dev-client --tunnel --port 8081` in the background (the tunnel lets a phone connect; open the dev build as described under Styling) and wait for it. Only when you need Metro's logs in your own terminal: kill the process on 8081 first, then start yours there. If 8081 is taken and you are not allowed to free it, stop and ask; never fall back to 8082. Then capture with `adb exec-out screencap -p > <scratchpad>/x.png` and Read the image; drive the UI with `adb shell input tap|swipe|keyevent` (back is 4). Fast refresh applies edits, so wait a few seconds before capturing. The floating gear button is the dev client's, not the app's.
+- Emulator tips: the AVD is `ClearEnergy_API33`. If `adb devices` says offline (a snapshot restore does this), restart it with `emulator -avd ClearEnergy_API33 -no-snapshot`. Screenshots can come back scaled (900×2000 for a 1080×2400 screen), so multiply tap coordinates by 1.2. `adb shell input text` needs `%s` for spaces. Reload the app with `am force-stop com.aryansrivastava.loomstay` and the deep link under Styling. Dark mode is `adb shell cmd uimode night yes|no`; after a font-scale test run `settings put system font_scale 1.0`. Key events leave a gray focus highlight on the first text (an emulator artifact; a tap clears it), a transient render error right after several edits means reload before debugging, and the "linking configured in multiple places" warning after a font or theme change is dev-only. A new route file needs Metro running so `.expo/types/router.d.ts` regenerates before `tsc` passes.
+- Never sign out on the test emulator: the user does every Google tap, so nobody else can sign back in. Only one agent drives the emulator or Metro at a time, and two agents never edit the same files.
 
 ## Reporting
 
