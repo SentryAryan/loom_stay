@@ -17,6 +17,8 @@ import { useEffect, useLayoutEffect } from "react";
 import { useColorScheme } from "react-native";
 
 import { tokenCache } from "@/features/auth/token-cache";
+import { SearchStateProvider } from "@/features/stays/search-state";
+import { FILTER_DETENT, SORT_DETENT } from "@/features/stays/sheet-detents";
 import { useThemeColors } from "@/theme";
 
 const publishableKey = process.env.EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY ?? "";
@@ -26,6 +28,13 @@ if (!publishableKey) {
 }
 
 SplashScreen.preventAutoHideAsync();
+
+const sheetOptions = {
+  presentation: "formSheet",
+  headerShown: false,
+  sheetGrabberVisible: true,
+  sheetCornerRadius: 24,
+} as const;
 
 export default function RootLayout() {
   const colors = useThemeColors();
@@ -53,8 +62,10 @@ export default function RootLayout() {
 
   return (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
-      <StatusBar style="auto" />
-      <RootNavigator />
+      <SearchStateProvider>
+        <StatusBar style="auto" />
+        <RootNavigator />
+      </SearchStateProvider>
     </ClerkProvider>
   );
 }
@@ -87,8 +98,17 @@ function RootNavigator() {
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
       </Stack.Protected>
       <Stack.Protected guard={!!isSignedIn}>
-        <Stack.Screen name="home" options={{ headerShown: false }} />
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="design-system" />
+        {/* Bottom sheets opened from the Search tab. Android draws no native header in a sheet. */}
+        <Stack.Screen
+          name="filters"
+          options={{ ...sheetOptions, sheetAllowedDetents: [FILTER_DETENT], contentStyle: { backgroundColor: colors.surface } }}
+        />
+        <Stack.Screen
+          name="sort"
+          options={{ ...sheetOptions, sheetAllowedDetents: [SORT_DETENT], contentStyle: { backgroundColor: colors.surface } }}
+        />
       </Stack.Protected>
     </Stack>
   );
