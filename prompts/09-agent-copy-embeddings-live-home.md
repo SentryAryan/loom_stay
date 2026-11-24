@@ -1,6 +1,6 @@
 # Feature: Agent Actions stay copy, Dataset Embeddings, live Home content
 
-Status: draft
+Status: approved (user answered all questions 2026-11-24; implementation not started)
 
 ## Goal
 Use Sanity Agent Actions to write each stay's `summary`, `description` and `highlights` from that stay's own fields, and prove the copy invents nothing. Then turn on Dataset Embeddings (ranking only) and make Home read the 30 stays from Sanity instead of `stays.ts`, with loading, error and empty states.
@@ -42,15 +42,15 @@ Defaults I picked (change any before approving). The ones that need the user are
 - Enabled **after** the copy is final and all 30 stays pass (so the first index is built once, from the good text), as a separate step the user triggers or approves. Free on all plans; the one cost is the monthly semantic-search quota, which only our queries use. Writes to the dataset get slightly slower while enabled.
 - Projection (own fields only, no references): `{ title, summary, description, highlights, vibes, category, amenities, city, region, country }`. Excludes numbers, slug, images, geopoint and references on purpose: prices and guests are exact constraints (GROQ), not meaning. Command: `npx sanity datasets embeddings enable production --projection '{ title, summary, description, highlights, vibes, category, amenities, city, region, country }' --wait`. This only applies to `property`; host and policy docs have no soft-intent text (confirm they should be left out; the projection above would give them empty embeddings).
 - Verified with a script `scripts/check-embeddings.mjs` (read-only): `*[_type=="property" && nightlyPrice <= $max] | score(text::semanticSimilarity($q)) | order(_score desc)[0..4]{title,_score}` for realistic sentences ("quiet cabin to unplug", "cozy with a fireplace", "sunny family villa"), checking the filter still wins (nothing over `$max` appears) and ranking is sensible.
-- **Out of scope here: wiring embeddings into the Search tab.** It means replacing `search-stays.ts` with an API route (Clerk-verified, Jev for the typed decisions, GROQ built in code). That is its own plan (see Questions 3).
+- **Out of scope here: wiring embeddings into the Search tab.** It means replacing `search-stays.ts` with an API route (Clerk-verified, Jev for the typed decisions, GROQ built in code). That is its own plan (decided: separate task, see Resolved decisions).
 
 **4. Home reads live content.**
 - No new dependency. Dataset is public, so Home reads the GROQ HTTP API with `fetch` from `https://vxnms1ub.apicdn.sanity.io/v2025-02-19/data/query/production?query=...&$id=...` (params JSON-encoded). Project id and dataset are not secrets; they go in `src/features/stays/sanity-config.ts`. No token in the app. (If the dataset is ever made private, Home must move behind an API route; noted, not needed now.)
 - New `src/features/stays/use-stays.ts`: `useStays()` returns `{status: 'loading' | 'error' | 'empty' | 'ready', stays, retry}`. Module-level cache so switching tabs does not refetch; `retry` clears it. Request has a 10s timeout (AbortController) and checks `res.ok`.
 - Query (constant, no interpolation): `*[_type == "property" && defined(slug.current)] | order(rating desc, reviewCount desc) { "id": _id, title, city, "state": region, country, category, rating, reviewCount, "pricePerNight": nightlyPrice, amenities, petsAllowed, vibes, "imageUri": images[0].asset->url, "imageAlt": images[0].alt }`. The `->` on the image asset is a projection, not a filter, so no rule conflict.
-- Mapper to the existing `Stay` type: `imageUri` gets `?auto=format&fit=crop&w=1200&h=900&q=80` appended; `state` shows the region (cards read "Lagos, Algarve" instead of "Lake Arrowhead, CA"; country is added to the type for later use); `AmenityId` and `amenityLabels` widen to the 13 schema ids; `petsAllowed` becomes a `pets` entry in `amenities` after the schema's first two so the first-two-tags rule still holds. Docs with missing image or price are dropped by the mapper, not crashed on.
+- Mapper to the existing `Stay` type: `imageUri` gets `?auto=format&fit=crop&w=1200&h=900&q=80` appended; `state` carries the country (cards read "Lagos, Portugal" instead of "Lake Arrowhead, CA"; decided by user); `AmenityId` and `amenityLabels` widen to the 13 schema ids; `petsAllowed` becomes a `pets` entry in `amenities` after the schema's first two so the first-two-tags rule still holds. Docs with missing image or price are dropped by the mapper, not crashed on.
 - UI states in `home.tsx` (design tokens only, no hex): loading = 3 skeleton cards the size of `StayCard` (`bg-surface-container-high`, static, no shimmer so reduced motion needs nothing); error = message "Couldn't load stays" plus a `Button` "Try again" that calls `retry`; empty (zero docs) = "No stays yet" text; empty after a category chip (no stay in that category) = "No <category> stays" with a "Show all" action. Header, greeting, search and chips render in every state. Existing enter animation is unchanged.
-- `stays.ts` stays as the data source for Search until Question 3 is answered. It keeps `Stay` and labels; its array is not used by Home any more. Home category chips filter the fetched list in memory, same as today.
+- `stays.ts` stays as the data source for Search until the separate embeddings-Search task ships. It keeps `Stay` and labels; its array is not used by Home any more. Home category chips filter the fetched list in memory, same as today.
 
 **5. No schema change in the recommended path.** Copy goes into the existing `summary/description/highlights` fields; the apparatus (facts hash, reports) lives in git-ignored files. Re-running the seed would overwrite generated copy with the old hand-written text (it uses `createOrReplace`); the plan adds a note at the top of `seed.mjs` and a README line, and recommends not re-running it after generation.
 
@@ -72,13 +72,13 @@ Defaults I picked (change any before approving). The ones that need the user are
 - `npx tsc --noEmit` and `npx expo lint` pass. Grep confirms `SANITY_WRITE_TOKEN` appears in no file under `src/` and nothing is `EXPO_PUBLIC_`-prefixed except existing Clerk key.
 - Failures explained by cause per Checks: missing data (field absent), the model's output, the check rule, or the code.
 
-## Questions for the user
-1. **Where does generated copy go?** (a) Overwrite `summary/description/highlights` in place, old copy kept in a git-ignored backup file (recommended; no schema change). (b) Add new fields (e.g. `generatedDescription`) so hand-written copy stays; needs a schema change plus Studio redeploy, and embeddings would see both. (c) Only report what would change and let a human paste it.
-2. **How strict is "invents nothing"?** (a) Both layers must pass; copy that fails keeps its old text (recommended). (b) Deterministic layer only (no second LLM call, cheaper and predictable but misses paraphrased inventions). Also: may copy mention the host or policies, or only the stay's own fields (recommended: own fields only)?
-3. **Search tab.** (a) Leave Search on local `stays.ts` for now and plan the embeddings-powered Search as its own task (recommended; Home and Search will briefly show different stays). (b) Switch Search to the live list with the current in-app parsing and no embeddings. (c) Include the embeddings Search (API route + Jev) in this task: bigger, needs its own approval round.
-4. **Dependencies.** Recommended: none in the app (plain `fetch`). The script uses `@sanity/client` 8.17.0, which is already in the studio's `node_modules` through `sanity` but is not a direct dependency; add it explicitly to `loomstay_sanity_studio/package.json`? (yes recommended / import the transitive copy)
-5. **Cost and dataset changes.** (a) OK to spend AI Agent Action credits: about 30 `generate` + 30 `prompt` calls per full run, plus retries, up to roughly 150 calls (the spike will measure the real cost first). (b) OK to enable Dataset Embeddings on `production` after step 4 (free to generate; only semantic queries use quota; slightly slower writes). (c) Confirm the dataset stays public, since Home reads it without a token.
-6. **Card location text.** The 30 stays are world-wide, so cards will read "Lagos, Algarve" (city, region) instead of "City, CA". OK, or prefer "City, Country"?
+## Resolved decisions (user answers, 2026-11-24)
+1. Copy storage: overwrite `summary/description/highlights` in place, keep a git-ignored backup. No schema change.
+2. Strictness: both check layers must pass. Copy uses the stay's own fields only (no host or policy facts).
+3. Search tab stays on local `stays.ts`. Embeddings-powered Search is planned as a separate task.
+4. `@sanity/client` is added as a direct dependency of `loomstay_sanity_studio/package.json`.
+5. Agent Action credit spend (up to ~150 calls) approved. Enabling Dataset Embeddings on `production` approved (still run after step 4 passes). Dataset stays public.
+6. Card location text is "City, Country".
 
 ## Result
 <Added during closeout: short summary of outcome and verification evidence>
