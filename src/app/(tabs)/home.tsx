@@ -1,24 +1,44 @@
 import { useUser } from "@clerk/expo";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useRef, useState } from "react";
+import { useMemo, useRef, useState, type ReactNode } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import Animated, { FadeIn, FadeOut, LinearTransition, useReducedMotion } from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
+import { Button } from "@/components/button";
 import { Logo } from "@/components/logo";
 import { AiSearchBar, type SearchInputInstance } from "@/features/stays/ai-search-bar";
 import { CategoryChips, type CategoryFilter } from "@/features/stays/category-chips";
 import { useEnterAnimation } from "@/features/stays/motion";
 import { useSearchState } from "@/features/stays/search-state";
 import { StayCard } from "@/features/stays/stay-card";
-import { stays } from "@/features/stays/stays";
+import { categoryLabels } from "@/features/stays/stays";
+import { useStays } from "@/features/stays/use-stays";
 import { useThemeColors } from "@/theme";
 
 const FILTER_FADE_IN_MS = 200;
 const FILTER_FADE_OUT_MS = 120;
 const LIST_REFLOW_MS = 200;
+
+const SKELETON_COUNT = 3;
+
+// Static placeholder the size of StayCard; no shimmer, so reduced motion needs nothing.
+function StayCardSkeleton() {
+  return <View accessibilityElementsHidden className="h-70 rounded-xl bg-surface-container-high" />;
+}
+
+function Notice({ title, children }: { title: string; children?: ReactNode }) {
+  return (
+    <View accessibilityLiveRegion="polite" className="items-center gap-md rounded-xl bg-surface-container px-5 py-xl">
+      <AppText variant="headlineSm" className="text-center">
+        {title}
+      </AppText>
+      {children}
+    </View>
+  );
+}
 
 function initialsOf(firstName?: string | null, lastName?: string | null, email?: string): string {
   const letters = `${firstName?.[0] ?? ""}${lastName?.[0] ?? ""}`;
@@ -43,9 +63,10 @@ export default function Home() {
   const enterChips = useEnterAnimation(3);
   const enterList = useEnterAnimation(4);
 
+  const { status, stays, retry } = useStays();
   const visibleStays = useMemo(
     () => (category === "all" ? stays : stays.filter((stay) => stay.category === category)),
-    [category],
+    [category, stays],
   );
 
   const firstName = user?.firstName;
@@ -115,16 +136,30 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={enterList} className="gap-md">
-        {visibleStays.map((stay) => (
-          <Animated.View
-            key={stay.id}
-            entering={hasFiltered ? FadeIn.duration(FILTER_FADE_IN_MS) : undefined}
-            exiting={FadeOut.duration(FILTER_FADE_OUT_MS)}
-            layout={isReducedMotion ? undefined : LinearTransition.duration(LIST_REFLOW_MS)}
-          >
-            <StayCard stay={stay} />
-          </Animated.View>
-        ))}
+        {status === "loading" &&
+          Array.from({ length: SKELETON_COUNT }, (_, i) => <StayCardSkeleton key={i} />)}
+        {status === "error" && (
+          <Notice title="Couldn't load stays">
+            <Button title="Try again" onPress={retry} />
+          </Notice>
+        )}
+        {status === "empty" && <Notice title="No stays yet" />}
+        {status === "ready" && visibleStays.length === 0 && category !== "all" && (
+          <Notice title={`No ${categoryLabels[category].toLowerCase()} stays`}>
+            <Button title="Show all" variant="secondary" onPress={() => handleCategory("all")} />
+          </Notice>
+        )}
+        {status === "ready" &&
+          visibleStays.map((stay) => (
+            <Animated.View
+              key={stay.id}
+              entering={hasFiltered ? FadeIn.duration(FILTER_FADE_IN_MS) : undefined}
+              exiting={FadeOut.duration(FILTER_FADE_OUT_MS)}
+              layout={isReducedMotion ? undefined : LinearTransition.duration(LIST_REFLOW_MS)}
+            >
+              <StayCard stay={stay} />
+            </Animated.View>
+          ))}
       </Animated.View>
     </ScrollView>
   );

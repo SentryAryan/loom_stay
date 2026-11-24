@@ -1,3 +1,5 @@
+// NOTE: ids use dashes on purpose. Ids with dots are private in Sanity, so anonymous reads (the app) would not see them.
+// Do not re-run this after generate-copy.mjs: createOrReplace overwrites the generated summary/description/highlights.
 // Seeds hosts, policies and 30 properties. Safe to re-run: every document has a fixed _id and is written
 // with createOrReplace, and Sanity de-duplicates identical image uploads.
 // Usage: SANITY_WRITE_TOKEN=... node scripts/seed.mjs [--dry-run]
@@ -30,9 +32,9 @@ async function uploadImage(url, filename) {
 const imageField = (assetId, extra = {}) => ({_type: 'image', asset: {_type: 'reference', _ref: assetId}, ...extra})
 const ref = (id) => ({_type: 'reference', _ref: id})
 const id = {
-  host: (k) => `seed.host.${k}`,
-  policy: (k) => `seed.policy.${k}`,
-  property: (slug) => `seed.property.${slug}`,
+  host: (k) => `host-${k}`,
+  policy: (k) => `policy-${k}`,
+  property: (slug) => `property-${slug}`,
 }
 
 const docs = []
