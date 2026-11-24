@@ -1,6 +1,6 @@
 # Feature: Agent Actions stay copy, Dataset Embeddings, live Home content
 
-Status: approved (user answered all questions 2026-11-24; implementation not started)
+Status: done
 
 ## Goal
 Use Sanity Agent Actions to write each stay's `summary`, `description` and `highlights` from that stay's own fields, and prove the copy invents nothing. Then turn on Dataset Embeddings (ranking only) and make Home read the 30 stays from Sanity instead of `stays.ts`, with loading, error and empty states.
@@ -81,4 +81,10 @@ Defaults I picked (change any before approving). The ones that need the user are
 6. Card location text is "City, Country".
 
 ## Result
-<Added during closeout: short summary of outcome and verification evidence>
+Done 2026-11-24 (ARY-49).
+- Spike: `generate` with `noWrite` works (~4s); `edit` without `noWrite` writes the draft; arrays append unless `operation: 'set'`; `prompt` with `format: 'json'` needs the word "json" in the instruction. No per-call cost is returned, so calls were counted.
+- Copy: 30/30 stays passed both checks first try, 62 of ~150 calls. Old copy backed up (git-ignored). `--verify-only` 30/30.
+- Deviation 1: seeded ids had dots (`seed.property.x`), which are private, so anonymous reads saw 0 stays. User chose to recreate with dash ids: `scripts/migrate-ids.mjs` created 49 docs (`property-x`, `host-x`, `policy-x`), verified 30/10/9 visible anonymously with no broken references, then deleted 79 old docs (incl. drafts and assist status docs). `seed.mjs` ids updated.
+- Embeddings enabled with the planned projection, re-indexed after the migration, `check-embeddings.mjs` ranks sensibly and the price filter holds.
+- Deviation 2: `AmenityId` was not widened (it would change the Search filter sheet); the mapper drops unknown amenity ids.
+- Home: live query returns 30, mapper drops 0, photo URLs 200. Lint passes. `tsc` shows only a `global.css` type error in `_layout.tsx` that this change does not touch. Emulator screenshots were not possible (no adb/emulator on this machine).
