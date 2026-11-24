@@ -3,6 +3,7 @@
 // verifies, and only then deletes the old documents.
 // Usage: SANITY_WRITE_TOKEN=... node scripts/migrate-ids.mjs [--delete-old]
 import {createClient} from '@sanity/client'
+import {fileURLToPath} from 'node:url'
 import {mkdirSync, writeFileSync} from 'node:fs'
 
 const client = createClient({projectId: 'vxnms1ub', dataset: 'production', apiVersion: '2025-02-19', useCdn: false, token: process.env.SANITY_WRITE_TOKEN, perspective: 'raw'})
@@ -11,7 +12,7 @@ const deleteOld = process.argv.includes('--delete-old')
 
 const old = await client.fetch(`*[_id match "seed.*" && !(_id in path("sanity.**"))]`)
 console.log(`${old.length} old docs`)
-const out = new URL('./out/', import.meta.url).pathname
+const out = fileURLToPath(new URL('./out/', import.meta.url))
 mkdirSync(out, {recursive: true})
 writeFileSync(`${out}pre-migration-${Date.now()}.json`, JSON.stringify(old, null, 2))
 

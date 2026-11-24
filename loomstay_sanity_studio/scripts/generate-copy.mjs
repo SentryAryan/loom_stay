@@ -5,6 +5,7 @@
 import {createClient} from '@sanity/client'
 import {createHash} from 'node:crypto'
 import {mkdirSync, readFileSync, writeFileSync, existsSync} from 'node:fs'
+import {fileURLToPath} from 'node:url'
 import {checkCopy} from './copy-check.mjs'
 
 const args = process.argv.slice(2)
@@ -14,12 +15,12 @@ const dryRun = flag('dry-run')
 const verifyOnly = flag('verify-only')
 const only = opt('only')
 const maxCalls = Number(opt('max-calls') ?? 140)
-const out = new URL('./out/', import.meta.url).pathname
+const out = fileURLToPath(new URL('./out/', import.meta.url))
 mkdirSync(out, {recursive: true})
 
 const token = process.env.SANITY_WRITE_TOKEN
-if (!token) {
-  console.error('Set SANITY_WRITE_TOKEN.')
+if (!token && !verifyOnly) {
+  console.error('Set SANITY_WRITE_TOKEN (not needed for --verify-only, which reads published copy anonymously).')
   process.exit(1)
 }
 const client = createClient({projectId: 'vxnms1ub', dataset: 'production', apiVersion: 'vX', useCdn: false, token})
