@@ -1,13 +1,13 @@
-import { stays, type AmenityId, type Stay, type StayCategory } from "./stays";
+import type { AmenityId, Stay, StayCategory } from "./stays";
 
-// Local stand-in for the real search (GROQ filters plus embeddings). Hard constraints are
-// parsed from the sentence in code and filter; soft words only rank, as embeddings will.
+// Reads the sentence in code: price, pets, amenities and category become exact GROQ filters
+// (see search-query.ts). The leftover words only rank, through Sanity's embeddings.
 
 export interface ParsedQuery {
   maxPrice: number | null;
   amenities: readonly AmenityId[];
   categories: readonly StayCategory[];
-  /** Leftover words, matched against the title, place and vibes to rank. */
+  /** Leftover words, sent to the embeddings to rank. They never filter. */
   words: readonly string[];
 }
 
@@ -92,37 +92,6 @@ export function withMaxPrice(parsed: ParsedQuery, maxPrice: number | null): Pars
   return { ...parsed, maxPrice };
 }
 
-function matchesConstraints(stay: Stay, parsed: ParsedQuery): boolean {
-  if (parsed.maxPrice !== null && stay.pricePerNight > parsed.maxPrice) return false;
-  if (!parsed.amenities.every((amenity) => stay.amenities.includes(amenity))) return false;
-  // Several categories mean "any of these" ("beach or city").
-  if (parsed.categories.length > 0 && !parsed.categories.includes(stay.category)) return false;
-  return true;
-}
-
-function softScore(stay: Stay, words: readonly string[]): number {
-  if (words.length === 0) return 0;
-  const place = `${stay.title} ${stay.city} ${stay.state}`.toLowerCase();
-  let score = 0;
-  for (const word of words) {
-    if (stay.vibes.includes(word)) score += 2;
-    else if (place.includes(word)) score += 1;
-  }
-  return score;
-}
-
-/**
- * Filters by the parsed constraints, then ranks by soft-word matches and rating.
- * Words that match nothing never remove a stay; they just do not help it rank.
- */
-export function searchParsed(parsed: ParsedQuery, source: readonly Stay[] = stays): Stay[] {
-  return source
-    .filter((stay) => matchesConstraints(stay, parsed))
-    .map((stay) => ({ stay, score: softScore(stay, parsed.words) }))
-    .sort((a, b) => b.score - a.score || b.stay.rating - a.stay.rating || b.stay.reviewCount - a.stay.reviewCount)
-    .map(({ stay }) => stay);
-}
-
 export type SortId = "best" | "price-asc" | "price-desc" | "rating";
 
 export const sortLabels: Record<SortId, string> = {
@@ -134,7 +103,7 @@ export const sortLabels: Record<SortId, string> = {
 
 export const sortOrder: readonly SortId[] = ["best", "price-asc", "price-desc", "rating"];
 
-/** "Best match" keeps the order searchParsed produced; the others re-sort a copy of it. */
+/** "Best match" keeps the order Sanity returned (embeddings score, then rating); the others re-sort a copy of it. */
 export function sortStays(list: readonly Stay[], sort: SortId): Stay[] {
   const copy = [...list];
   if (sort === "price-asc") return copy.sort((a, b) => a.pricePerNight - b.pricePerNight);
@@ -145,8 +114,4 @@ export function sortStays(list: readonly Stay[], sort: SortId): Stay[] {
 
 export function countActiveFilters(parsed: ParsedQuery): number {
   return (parsed.maxPrice !== null ? 1 : 0) + parsed.amenities.length + parsed.categories.length;
-}
-
-export function searchStays(query: string, source: readonly Stay[] = stays): Stay[] {
-  return searchParsed(parseQuery(query), source);
 }
