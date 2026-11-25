@@ -1,19 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { FlatList, Keyboard, Pressable, TextInput, View } from "react-native";
+import { ActivityIndicator, FlatList, Keyboard, Pressable, TextInput, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
+import { Button } from "@/components/button";
 import { FilterChips } from "@/features/stays/filter-chips";
 import { useSearchState } from "@/features/stays/search-state";
-import {
-  countActiveFilters,
-  searchParsed,
-  sortLabels,
-  sortStays,
-} from "@/features/stays/search-stays";
+import { countActiveFilters, sortLabels, sortStays } from "@/features/stays/search-stays";
 import { StayRow } from "@/features/stays/stay-row";
+import { useSearchResults } from "@/features/stays/use-search-results";
 import { useThemeColors } from "@/theme";
 
 export default function SearchScreen() {
@@ -22,7 +19,8 @@ export default function SearchScreen() {
   const { text, setText, filters, setFilters, sort, searchId, commitText } = useSearchState();
   const [favorites, setFavorites] = useState<ReadonlySet<string>>(new Set());
 
-  const results = useMemo(() => sortStays(searchParsed(filters), sort), [filters, sort]);
+  const { status, stays, isRefreshing, retry } = useSearchResults(filters);
+  const results = useMemo(() => sortStays(stays, sort), [stays, sort]);
   const activeCount = countActiveFilters(filters);
 
   function handleSubmit() {
@@ -91,7 +89,11 @@ export default function SearchScreen() {
 
       <View className="flex-row items-center justify-between px-5 pb-sm pt-lg">
         <AppText variant="bodyLg" numeric className="text-on-surface-variant" accessibilityLiveRegion="polite">
-          {results.length} {results.length === 1 ? "stay" : "stays"}
+          {status === "loading" || isRefreshing
+            ? "Searching…"
+            : status === "error"
+              ? "Search unavailable"
+              : `${results.length} ${results.length === 1 ? "stay" : "stays"}`}
         </AppText>
         <Pressable
           accessibilityRole="button"
@@ -114,6 +116,7 @@ export default function SearchScreen() {
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         showsVerticalScrollIndicator={false}
+        className={isRefreshing ? "opacity-60" : "opacity-100"}
         contentContainerClassName="gap-5 pb-md pt-sm"
         renderItem={({ item }) => (
           <StayRow
@@ -124,15 +127,32 @@ export default function SearchScreen() {
           />
         )}
         ListEmptyComponent={
-          <View className="items-center gap-sm px-xl pt-2xl">
-            <Ionicons name="home-outline" size={32} color={colors.onSurfaceVariant} />
-            <AppText variant="headlineMd" className="text-center">
-              No stays match yet
-            </AppText>
-            <AppText variant="bodyMd" className="text-center text-on-surface-variant">
-              Try removing a filter or describing the stay another way, like a quiet cabin under $300.
-            </AppText>
-          </View>
+          status === "loading" ? (
+            <View className="items-center pt-2xl">
+              <ActivityIndicator color={colors.onSurfaceVariant} accessibilityLabel="Searching stays" />
+            </View>
+          ) : status === "error" ? (
+            <View className="items-center gap-sm px-xl pt-2xl">
+              <Ionicons name="cloud-offline-outline" size={32} color={colors.onSurfaceVariant} />
+              <AppText variant="headlineMd" className="text-center">
+                Couldn&apos;t search stays
+              </AppText>
+              <AppText variant="bodyMd" className="text-center text-on-surface-variant">
+                Check your connection and try again.
+              </AppText>
+              <Button title="Try again" onPress={retry} />
+            </View>
+          ) : (
+            <View className="items-center gap-sm px-xl pt-2xl">
+              <Ionicons name="home-outline" size={32} color={colors.onSurfaceVariant} />
+              <AppText variant="headlineMd" className="text-center">
+                No stays match yet
+              </AppText>
+              <AppText variant="bodyMd" className="text-center text-on-surface-variant">
+                Try removing a filter or describing the stay another way, like a quiet cabin under $300.
+              </AppText>
+            </View>
+          )
         }
       />
     </View>

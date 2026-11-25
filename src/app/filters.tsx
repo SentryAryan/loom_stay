@@ -1,18 +1,12 @@
 import { router } from "expo-router";
-import { useMemo } from "react";
 import { Platform, ScrollView, useWindowDimensions, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
-import {
-  countActiveFilters,
-  searchParsed,
-  withAmenity,
-  withCategory,
-  withMaxPrice,
-} from "@/features/stays/search-stays";
+import { countActiveFilters, withAmenity, withCategory, withMaxPrice } from "@/features/stays/search-stays";
 import { useSearchState } from "@/features/stays/search-state";
+import { useSearchResults } from "@/features/stays/use-search-results";
 import { SheetHeader } from "@/features/stays/sheet-header";
 import { amenityLabels, categoryLabels, type AmenityId, type StayCategory } from "@/features/stays/stays";
 import { ToggleChip } from "@/features/stays/toggle-chip";
@@ -45,7 +39,10 @@ export default function Filters() {
   // A detent is a fraction of the screen below the status bar.
   const sheetFrame =
     Platform.OS === "android" ? { height: (windowHeight - insets.top) * FILTER_DETENT } : { flex: 1 };
-  const resultCount = useMemo(() => searchParsed(filters).length, [filters]);
+  // Same request the Search tab runs for these filters, so the count matches the list behind the sheet.
+  const { status, stays, isRefreshing } = useSearchResults(filters);
+  const resultCount = stays.length;
+  const hasCount = status !== "loading" && status !== "error" && !isRefreshing;
   const activeCount = countActiveFilters(filters);
 
   // A price typed in the sentence ("under $250") is not one of the steps; show it as its own chip.
@@ -113,7 +110,7 @@ export default function Filters() {
           onPress={() => setFilters(withMaxPrice({ ...filters, amenities: [], categories: [] }, null))}
         />
         <Button
-          title={resultCount === 1 ? "Show 1 stay" : `Show ${resultCount} stays`}
+          title={!hasCount ? "Show stays" : resultCount === 1 ? "Show 1 stay" : `Show ${resultCount} stays`}
           className="flex-1"
           onPress={() => router.back()}
         />
