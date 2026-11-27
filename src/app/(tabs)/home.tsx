@@ -27,7 +27,7 @@ const SKELETON_COUNT = 3;
 
 // Static placeholder the size of StayCard; no shimmer, so reduced motion needs nothing.
 function StayCardSkeleton() {
-  return <View accessibilityElementsHidden className="h-70 rounded-xl bg-surface-container-high" />;
+  return <View aria-hidden className="h-70 rounded-xl bg-surface-container-high" />;
 }
 
 function Notice({ title, children }: { title: string; children?: ReactNode }) {

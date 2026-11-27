@@ -1,3 +1,4 @@
+import "@/config/web-polyfills";
 import { ClerkProvider, useAuth, useUser } from "@clerk/expo";
 import "../../global.css";
 import {

@@ -13,7 +13,7 @@ interface SocialButtonsProps {
 export function SocialButtons({ onGooglePress, disabled }: SocialButtonsProps) {
   return (
     <View className="gap-md">
-      <View className="flex-row items-center gap-md" accessibilityElementsHidden importantForAccessibility="no-hide-descendants">
+      <View className="flex-row items-center gap-md" aria-hidden>
         <View className="h-px flex-1 bg-outline" />
         <AppText variant="bodyMd" className="text-on-surface-variant">
           or
