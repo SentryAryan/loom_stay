@@ -5,6 +5,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 import { sortLabels, sortOrder, type SortId } from "@/features/stays/search-stays";
 import { useSearchState } from "@/features/stays/search-state";
 import { SheetHeader } from "@/features/stays/sheet-header";
@@ -17,6 +18,7 @@ export default function Sort() {
   const { sort, setSort } = useSearchState();
 
   function choose(next: SortId) {
+    posthog?.capture("stay_sort_selected", { previous_sort: sort, sort: next });
     setSort(next);
     router.back();
   }

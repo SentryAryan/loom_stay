@@ -9,6 +9,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { Logo } from "@/components/logo";
+import { posthog } from "@/config/posthog";
 import { AiSearchBar, type SearchInputInstance } from "@/features/stays/ai-search-bar";
 import { CategoryChips, type CategoryFilter } from "@/features/stays/category-chips";
 import { useEnterAnimation } from "@/features/stays/motion";
@@ -76,12 +77,14 @@ export default function Home() {
   function handleSearch() {
     const text = query.trim();
     if (!text) return;
+    posthog?.capture("stay_search_submitted", { query_length: text.length, source: "home" });
     startSearch(text);
     router.navigate("/search");
     setQuery("");
   }
 
   function handleCategory(next: CategoryFilter) {
+    posthog?.capture("stay_category_selected", { category: next });
     setHasFiltered(true);
     setCategory(next);
   }
@@ -128,7 +131,7 @@ export default function Home() {
       </Animated.View>
 
       <Animated.View entering={enterSearch}>
-        <AiSearchBar inputRef={searchRef}value={query} onChangeText={setQuery} onSubmit={handleSearch} />
+        <AiSearchBar inputRef={searchRef} value={query} onChangeText={setQuery} onSubmit={handleSearch} />
       </Animated.View>
 
       <Animated.View entering={enterChips}>

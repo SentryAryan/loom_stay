@@ -1,4 +1,4 @@
-import { ClerkProvider, useAuth } from "@clerk/expo";
+import { ClerkProvider, useAuth, useUser } from "@clerk/expo";
 import "../../global.css";
 import {
   PlusJakartaSans_400Regular,
@@ -8,14 +8,16 @@ import {
   PlusJakartaSans_800ExtraBold,
   useFonts,
 } from "@expo-google-fonts/plus-jakarta-sans";
-import { Stack } from "expo-router";
+import { Stack, usePathname } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import * as SystemUI from "expo-system-ui";
 import { colorScheme } from "react-native-css";
-import { useEffect, useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
+import { PostHogProvider } from "posthog-react-native";
 import { useColorScheme } from "react-native";
 
+import { posthog } from "@/config/posthog";
 import { tokenCache } from "@/features/auth/token-cache";
 import { SearchStateProvider } from "@/features/stays/search-state";
 import { FILTER_DETENT, SORT_DETENT } from "@/features/stays/sheet-detents";
@@ -60,14 +62,50 @@ export default function RootLayout() {
 
   if (!isReady) return null;
 
-  return (
+  const content = (
     <ClerkProvider publishableKey={publishableKey} tokenCache={tokenCache}>
       <SearchStateProvider>
+        <PostHogIdentity />
         <StatusBar style="auto" />
         <RootNavigator />
       </SearchStateProvider>
     </ClerkProvider>
   );
+
+  return posthog ? <PostHogProvider client={posthog}>{content}</PostHogProvider> : content;
+}
+
+function PostHogIdentity() {
+  const { isLoaded, user } = useUser();
+  const identifiedUserId = useRef<string | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isLoaded) return;
+
+    if (!user) {
+      if (identifiedUserId.current) {
+        posthog?.reset();
+        identifiedUserId.current = undefined;
+      }
+      return;
+    }
+
+    if (identifiedUserId.current === user.id) return;
+
+    if (identifiedUserId.current) posthog?.reset();
+
+    posthog?.identify(user.id, {
+      $set: {
+        ...(user.primaryEmailAddress?.emailAddress ? { $email: user.primaryEmailAddress.emailAddress } : {}),
+        ...(user.fullName ? { $name: user.fullName } : {}),
+        ...(user.firstName ? { $first_name: user.firstName } : {}),
+        ...(user.lastName ? { $last_name: user.lastName } : {}),
+      },
+    });
+    identifiedUserId.current = user.id;
+  }, [isLoaded, user]);
+
+  return null;
 }
 
 // Signed-out guests see onboarding and the auth screens; signed-in guests see the
@@ -75,6 +113,11 @@ export default function RootLayout() {
 function RootNavigator() {
   const colors = useThemeColors();
   const { isLoaded, isSignedIn } = useAuth();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    posthog?.screen(pathname);
+  }, [pathname]);
 
   // Keep the splash up until Clerk has restored the saved session, so a signed-in
   // guest never sees a flash of onboarding on a cold start.

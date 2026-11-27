@@ -59,3 +59,4 @@ skills-lock.json
 node_modules
 # generated copy backups and reports (Plan 09)
 loomstay_sanity_studio/scripts/out/
+.env.local

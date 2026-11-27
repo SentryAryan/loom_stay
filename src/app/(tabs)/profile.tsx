@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 
 // Placeholder profile: who is signed in and Sign out. The real profile comes with its own feature.
 export default function Profile() {
@@ -16,6 +17,7 @@ export default function Profile() {
   const displayName = user?.fullName ?? user?.primaryEmailAddress?.emailAddress;
 
   async function handleSignOut() {
+    posthog?.capture("account_signed_out");
     setIsSigningOut(true);
     try {
       await signOut();
