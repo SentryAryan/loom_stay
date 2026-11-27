@@ -54,7 +54,7 @@ export function Logo({ variant = "lockup", size = "md", className, textClassName
       className={`flex-row items-center gap-sm ${className ?? ""}`}
     >
       {variant !== "wordmark" ? (
-        <View importantForAccessibility="no-hide-descendants" accessibilityElementsHidden>
+        <View aria-hidden>
           <LogoSymbol size={size} />
         </View>
       ) : null}
@@ -62,8 +62,7 @@ export function Logo({ variant = "lockup", size = "md", className, textClassName
         <AppText
           variant={sizes[size].wordmark}
           className={textClassName}
-          importantForAccessibility="no"
-          accessibilityElementsHidden
+          aria-hidden
         >
           Loom Stay
         </AppText>

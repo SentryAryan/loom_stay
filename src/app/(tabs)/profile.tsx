@@ -18,6 +18,9 @@ export default function Profile() {
 
   async function handleSignOut() {
     posthog?.capture("account_signed_out");
+    // Web reloads the page as soon as Clerk signs out, before the identity effect in the root
+    // layout can reset PostHog, so reset here to give the next visitor a fresh anonymous id.
+    posthog?.reset();
     setIsSigningOut(true);
     try {
       await signOut();
