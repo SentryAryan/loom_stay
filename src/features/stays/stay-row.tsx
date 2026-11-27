@@ -60,63 +60,67 @@ export function StayRow({ stay, highlightAmenities = [], isFavorite, onToggleFav
     }
   }
 
+  // The heart is a sibling of the row button, not a child: web renders both as <button>, and
+  // a button inside a button is invalid HTML (hydration error).
   return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={`${stay.title}, ${stay.city}, ${stay.state}, rated ${stay.rating}, $${stay.pricePerNight} a night`}
-      onPress={onPress}
-      className="flex-row gap-3.5 px-md transition-transform duration-150 active:scale-[0.98]"
-    >
-      {/* expo-image takes no className, so the sized, rounded frame is a View around it. */}
-      <View className="h-34 w-31 overflow-hidden rounded-xl bg-surface-container-high">
-        <Image
-          source={{ uri: stay.imageUri }}
-          contentFit="cover"
-          transition={200}
-          accessibilityLabel={stay.imageAlt}
-          style={StyleSheet.absoluteFill}
-        />
-      </View>
+    <View>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel={`${stay.title}, ${stay.city}, ${stay.state}, rated ${stay.rating}, $${stay.pricePerNight} a night`}
+        onPress={onPress}
+        className="flex-row gap-3.5 px-md transition-transform duration-150 active:scale-[0.98]"
+      >
+        {/* expo-image takes no className, so the sized, rounded frame is a View around it. */}
+        <View className="h-34 w-31 overflow-hidden rounded-xl bg-surface-container-high">
+          <Image
+            source={{ uri: stay.imageUri }}
+            contentFit="cover"
+            transition={200}
+            accessibilityLabel={stay.imageAlt}
+            style={StyleSheet.absoluteFill}
+          />
+        </View>
 
-      <View className="flex-1 gap-1 pr-11">
-        <AppText variant="headlineMd" numberOfLines={2}>
-          {stay.title}
-        </AppText>
-        <View className="flex-row items-center gap-1.5">
-          <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
-          <AppText variant="bodyMd" className="text-on-surface-variant" numberOfLines={1}>
-            {stay.city}, {stay.state}
+        <View className="flex-1 gap-1 pr-11">
+          <AppText variant="headlineMd" numberOfLines={2}>
+            {stay.title}
           </AppText>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="location-outline" size={16} color={colors.onSurfaceVariant} />
+            <AppText variant="bodyMd" className="text-on-surface-variant" numberOfLines={1}>
+              {stay.city}, {stay.state}
+            </AppText>
+          </View>
+          <View className="flex-row items-center gap-1.5">
+            <Ionicons name="star" size={16} color={colors.secondaryContainer} />
+            <AppText variant="headlineSm" numeric>
+              {stay.rating.toFixed(1)}
+            </AppText>
+            <AppText variant="bodyMd" numeric className="text-on-surface-variant">
+              ({stay.reviewCount})
+            </AppText>
+          </View>
+          <View className="flex-row flex-wrap gap-1.5 pt-0.5">
+            {tags.map((amenity) => (
+              <View
+                key={amenity}
+                className="h-7 flex-row items-center gap-1.5 rounded-full bg-surface-container px-2.5"
+              >
+                <Ionicons name={amenityIcons[amenity]} size={14} color={colors.onSurface} />
+                <AppText variant="labelMd">{amenityLabels[amenity]}</AppText>
+              </View>
+            ))}
+          </View>
+          <View className="flex-row items-baseline gap-1 pt-0.5">
+            <AppText variant="headlineXl" numeric>
+              ${stay.pricePerNight}
+            </AppText>
+            <AppText variant="bodyMd" className="text-on-surface-variant">
+              / night
+            </AppText>
+          </View>
         </View>
-        <View className="flex-row items-center gap-1.5">
-          <Ionicons name="star" size={16} color={colors.secondaryContainer} />
-          <AppText variant="headlineSm" numeric>
-            {stay.rating.toFixed(1)}
-          </AppText>
-          <AppText variant="bodyMd" numeric className="text-on-surface-variant">
-            ({stay.reviewCount})
-          </AppText>
-        </View>
-        <View className="flex-row flex-wrap gap-1.5 pt-0.5">
-          {tags.map((amenity) => (
-            <View
-              key={amenity}
-              className="h-7 flex-row items-center gap-1.5 rounded-full bg-surface-container px-2.5"
-            >
-              <Ionicons name={amenityIcons[amenity]} size={14} color={colors.onSurface} />
-              <AppText variant="labelMd">{amenityLabels[amenity]}</AppText>
-            </View>
-          ))}
-        </View>
-        <View className="flex-row items-baseline gap-1 pt-0.5">
-          <AppText variant="headlineXl" numeric>
-            ${stay.pricePerNight}
-          </AppText>
-          <AppText variant="bodyMd" className="text-on-surface-variant">
-            / night
-          </AppText>
-        </View>
-      </View>
+      </Pressable>
 
       <Animated.View style={heartStyle} className="absolute right-md top-0">
         <Pressable
@@ -134,6 +138,6 @@ export function StayRow({ stay, highlightAmenities = [], isFavorite, onToggleFav
           />
         </Pressable>
       </Animated.View>
-    </Pressable>
+    </View>
   );
 }
