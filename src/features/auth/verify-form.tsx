@@ -6,6 +6,7 @@ import { Pressable, View } from "react-native";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 import { useThemeColors } from "@/theme";
 
 import { AuthScreen } from "./auth-screen";
@@ -52,7 +53,14 @@ export function VerifyForm() {
     if (message) {
       setError(message);
       setCode("");
+      return;
     }
+    posthog?.capture("account_verification_completed", {
+      verification_type: isDeviceCheck ? "new_device" : "email",
+    });
+    posthog?.logger.info("account verification completed", {
+      verification_type: isDeviceCheck ? "new_device" : "email",
+    });
   }
 
   function handleChange(value: string) {
@@ -87,6 +95,9 @@ export function VerifyForm() {
       setError(message);
       return;
     }
+    posthog?.capture("verification_code_resent", {
+      verification_type: isDeviceCheck ? "new_device" : "email",
+    });
     setSecondsLeft(RESEND_SECONDS);
     setNotice("We sent you a new code.");
   }

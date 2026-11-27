@@ -6,6 +6,7 @@ import { View } from "react-native";
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
 import { TextField, type TextInputHandle } from "@/components/text-field";
+import { posthog } from "@/config/posthog";
 import { useThemeColors } from "@/theme";
 
 import { AuthScreen, AuthSwitchLink } from "./auth-screen";
@@ -51,6 +52,8 @@ export function SignUpForm() {
       setFormError(message);
       return;
     }
+    posthog?.capture("account_sign_up_started", { method: "password" });
+    posthog?.logger.info("account sign-up started", { auth_method: "password" });
     router.push({ pathname: "/verify", params: { email } });
   }
 

@@ -11,6 +11,11 @@
       ]
     }
   },
+  "exclude": [
+    "node_modules",
+    "ECC",
+    "loomstay_sanity_studio"
+  ],
   "include": [
     "**/*.ts",
     "**/*.tsx",

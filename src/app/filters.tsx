@@ -4,6 +4,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 import { countActiveFilters, withAmenity, withCategory, withMaxPrice } from "@/features/stays/search-stays";
 import { useSearchState } from "@/features/stays/search-state";
 import { useSearchResults } from "@/features/stays/use-search-results";
@@ -49,6 +50,17 @@ export default function Filters() {
   const priceSteps = PRICE_STEPS.includes(filters.maxPrice)
     ? PRICE_STEPS
     : [...PRICE_STEPS, filters.maxPrice].sort((a, b) => (a ?? 0) - (b ?? 0));
+
+  function handleApplyFilters() {
+    posthog?.capture("stay_filters_applied", {
+      active_filter_count: activeCount,
+      category_count: filters.categories.length,
+      amenity_count: filters.amenities.length,
+      has_max_price: filters.maxPrice !== null,
+      result_count: hasCount ? resultCount : null,
+    });
+    router.back();
+  }
 
   return (
     <View className="bg-surface" style={sheetFrame}>
@@ -112,7 +124,7 @@ export default function Filters() {
         <Button
           title={!hasCount ? "Show stays" : resultCount === 1 ? "Show 1 stay" : `Show ${resultCount} stays`}
           className="flex-1"
-          onPress={() => router.back()}
+          onPress={handleApplyFilters}
         />
       </View>
     </View>

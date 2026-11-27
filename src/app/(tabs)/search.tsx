@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 import { FilterChips } from "@/features/stays/filter-chips";
 import { useSearchState } from "@/features/stays/search-state";
 import { countActiveFilters, sortLabels, sortStays } from "@/features/stays/search-stays";
@@ -25,10 +26,16 @@ export default function SearchScreen() {
 
   function handleSubmit() {
     Keyboard.dismiss();
+    const query = text.trim();
+    if (!query) return;
+    posthog?.capture("stay_search_submitted", { query_length: query.length, source: "search" });
+    posthog?.logger.info("stay search requested", { query_length: query.length, source: "search" });
     commitText();
   }
 
   function handleToggleFavorite(id: string) {
+    const isFavorite = favorites.has(id);
+    posthog?.capture("stay_favorite_toggled", { is_favorite: !isFavorite });
     setFavorites((current) => {
       const next = new Set(current);
       if (next.has(id)) next.delete(id);

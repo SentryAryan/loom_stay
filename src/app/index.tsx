@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { AppText } from "@/components/app-text";
 import { Button } from "@/components/button";
+import { posthog } from "@/config/posthog";
 import { GoogleLogo } from "@/components/google-logo";
 import { Logo } from "@/components/logo";
 import { SigningInOverlay } from "@/features/auth/signing-in-overlay";
@@ -45,6 +46,7 @@ export default function Onboarding() {
 
   const handlePrimary = () => {
     if (isLast) {
+      posthog?.capture("onboarding_completed", { onboarding_step_count: onboardingSlides.length });
       router.push("/sign-up");
       return;
     }
@@ -68,7 +70,10 @@ export default function Onboarding() {
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Skip onboarding"
-            onPress={() => router.push("/sign-up")}
+            onPress={() => {
+              posthog?.capture("onboarding_skipped", { current_step: index + 1 });
+              router.push("/sign-up");
+            }}
             className="min-h-11 justify-center rounded-full bg-glass px-md active:scale-95"
           >
             <AppText variant="headlineSm">Skip</AppText>
